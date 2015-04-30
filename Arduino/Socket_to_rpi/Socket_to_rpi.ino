@@ -28,12 +28,12 @@ https://github.com/bblanchon/ArduinoJson
 #include <Ethernet.h>
 #include <SPI.h>
 #include <String.h>
-#include "Socket_to_rpi.h"
 EthernetClient client;
 unsigned long lastTime;
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 //char hostname[] = "122.117.119.197";
 char hostname[] = "192.168.41.64";
+char Main_Device[]="D1";
 int port = 50000;
 const int LED_Pin = 4; //LED Pin.
 const int Button_Pin = 3; //button pin.

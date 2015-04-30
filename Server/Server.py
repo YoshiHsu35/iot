@@ -36,9 +36,11 @@ def serverSocketThread():
         devicePollingInterval = 1
 
         def clientServiceThread(client): 
-
-            #將此GW加入GW清單中
-            _g_gatewayList.append(client)
+             
+            gatewayInfo = []
+            gatewayInfo.append(client)
+             
+            ClientRegisted = False
                 
             while(True):
                     time.sleep(devicePollingInterval)
@@ -53,7 +55,15 @@ def serverSocketThread():
                         _obj_json_msg = json.loads(_str_recvMsg)
                         
                         _obj_json_msg["Server"] = _g_cst_serverName
-                        
+
+                        if not ClientRegisted:
+                            gatewayInfo.append(_obj_json_msg["Gateway"])
+
+                            #將此GW加入GW清單中
+                            _g_gatewayList.append(gatewayInfo)
+                            print ("[REGISTE] Gateway %s" % gatewayInfo) 
+                            ClientRegisted = True
+                             
                     except:
                         print("[ERROR] Couldn't converte json to Objet!")
 
@@ -84,9 +94,7 @@ def serverSocketThread():
 t = Thread(target = serverSocketThread,args = ())
 t.start()
 
- 
-
-
+  
 _g_instructionBuffer = [] 
 
 ########### WebSocket to SV ##############

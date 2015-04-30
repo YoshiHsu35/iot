@@ -26,6 +26,9 @@ print(". ######::: ##:::: ##:::: ##:::: ########:. ###. ###:: ##:::: ##:::: ##::
 print(":......::::..:::::..:::::..:::::........:::...::...:::..:::::..:::::..:::::")
 print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
+class Test:
+ def __getitem__(self,key):
+  return 0
 
 ########### Normal Socket to Server(As socket client) ##############
 
@@ -57,7 +60,7 @@ def GatewayToServerSocketThread():
             exit(1) 
 
         #向Server註冊
-        ToServerSocket.send('{"Gateway":%s, "Control":REG}' %(_g_cst_gatewayName)) 
+        ToServerSocket.send('{"Gateway":"%s","Control":"REG"}' %(_g_cst_gatewayName)) 
          
 
 t_GatewayServer = Thread(target = GatewayToServerSocketThread,args = ())
@@ -75,8 +78,12 @@ def NodeToGatewaySocketThread():
         def clientServiceThread(client): 
 
             #若node連線建立成功，把這個連線存到node list，讓其他的部分可以調用傳訊息
-            _g_nodeList.append(client)
-                
+
+            nodeInfo = []
+            nodeInfo.append(client)
+
+            ClientRegisted = False
+             
             while(True):
                     time.sleep(devicePollingInterval)
 
@@ -117,7 +124,15 @@ def NodeToGatewaySocketThread():
 
                         #轉成文字
                         _str_sendToSvJson = json.dumps(_obj_json_msg)
-                                                                    
+
+                        #先註冊DEVICE
+                        if not ClientRegisted:
+                            nodeInfo.append(_obj_json_msg["Device"]) 
+                            #將此GW加入GW清單中 
+                            _g_nodeList.append(nodeInfo)
+                            print ("[REGISTE] Node %s" % nodeInfo) 
+                            ClientRegisted = True
+                              
                     except:
                         print("[ERROR] Couldn't converte json to Objet!")
                          
