@@ -1,6 +1,6 @@
 /*******************
-2015/05/01
-Version:1.6
+2015/05/05
+Version:1.6.2
 Device:
 1. Arduino UNO.
 2. W5100(Don't need other device or line)
@@ -8,7 +8,11 @@ Device:
 Modify:
 1. Add new function about json receive.
 
+1.6.2 Add fast switch address. not modify logic.
 1.6 Adjust sending data to GW flow.
+
+Bugs:
+1.6.2 Need repair GW->Node Recv issue.
 
 Flow:
 1. Send a message to spec address.
@@ -30,10 +34,18 @@ https://github.com/bblanchon/ArduinoJson
 #include <String.h>
 EthernetClient client;
 unsigned long lastTime;
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xFD };
+//byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+
 //char hostname[] = "122.117.119.197";
-char hostname[] = "192.168.41.64";
-char Main_Device[]="D1";
+
+char hostname[] = "192.168.1.81";
+//char hostname[] = "192.168.1.31";
+
+char Main_Device[] = "D1";
+//char Main_Device[] = "D2";
+
 int port = 50000;
 const int LED_Pin = 4; //LED Pin.
 const int Button_Pin = 3; //button pin.
@@ -76,10 +88,34 @@ void setup() {
   pinMode(Button_Pin, INPUT);
   //attachInterrupt(interruptNumber, buttonStateChanged, HIGH);
 
-Serial.print("Connecting to GW, please wait.");
+  Serial.print("Connecting to GW, please wait.");
   Ethernet.begin(mac);
-  if (!client.connect(hostname, port)) Serial.println(F("Not connected."));
+  if (!client.connect(hostname, port))
+  {
+    Serial.println(F("Not connected."));
+  }
+  else
+  {
+    initREGMSG();
+  }
 
+}
+
+void initREGMSG()
+{
+  StaticJsonBuffer<200> jsonBuffer;
+  char jsonCharBuffer[256];
+
+  JsonObject& root = jsonBuffer.createObject();
+  root["Device"] = Main_Device;
+  root["Control"] = "REG";
+  root["TimeStamp"] = lastTime;
+
+  root.printTo(jsonCharBuffer, sizeof(jsonCharBuffer));
+
+  Serial.print("Sending INIT REG MSG...: ");
+  Serial.println(jsonCharBuffer);
+  client.print(jsonCharBuffer);
 }
 
 void loop() {
@@ -148,6 +184,10 @@ void loop() {
       {
         Serial.println(F("Not connected."));
         client.stop();
+      }
+      else
+      {
+        initREGMSG();
       }
     }
 

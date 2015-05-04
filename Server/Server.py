@@ -1,20 +1,29 @@
-﻿from websocket_server import WebsocketServer
+﻿#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from websocket_server import WebsocketServer
 from threading import Thread
 import socket
 import sys
 import time
 import json
+import copy
 
 _g_cst_serverName = "SV1"
 
-_g_cst_SVSocketServerIP = '' #不用特別指定的話就是接受所有INTERFACE的IP進入 
-_g_cst_SVSocketServerPort = 50005 
+_g_cst_SVSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
+_g_cst_SVSocketServerPort = 50005
 _g_cst_MaxGatewayConnectionCount = 10
 _g_cst_GatewayConnectionTimeOut = 1000
 
-_g_cst_webSocketServerIP = '' #不用特別指定的話就是接受所有INTERFACE的IP進入
-_g_cst_webSocketServerPORT = 8009  
- 
+_g_cst_webSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
+_g_cst_webSocketServerPORT = 8009
+
+
+_g_cst_GWRoute = [['GW1','GW2'],['GW2','GW1']] #GW1->GW2, GW2->GW1 可支援串接例如['GW1','GW2','GW3']代表GW1->GW2,3
+_g_cst_DEVICERoute = [['D1','D2'],['D2','D2']]
+_g_cst_WhichTypeToTransport ='REP'
+
 print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
 print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
 print(":'######::'########:'########::'##::::'##:'########:'########::")
@@ -31,99 +40,145 @@ print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
 _g_gatewayList = []
 
-#listen to device socket connection
-def serverSocketThread(): 
-        devicePollingInterval = 1
+# listen to device socket connection
+def serverSocketThread():
+    devicePollingInterval = 1
 
-        def clientServiceThread(client): 
-             
-            gatewayInfo = []
-            gatewayInfo.append(client)
-             
-            ClientRegisted = False
-                
-            while(True):
-                    time.sleep(devicePollingInterval)
-                          
-                    _str_recvMsg = client.recv(256)
-                    _str_decodeMsg = _str_recvMsg.decode('utf-8')
-                      
-                        
-                    print("[MESSAGE] Reciving message from [Gateway] at %s : \n >>> %s <<<" %(time.asctime(time.localtime(time.time())), _str_recvMsg))
-                    
-                    try:
-                        _obj_json_msg = json.loads(_str_recvMsg)
-                        
-                        _obj_json_msg["Server"] = _g_cst_serverName
+    def clientServiceThread(client):
 
-                        if not ClientRegisted:
-                            gatewayInfo.append(_obj_json_msg["Gateway"])
+        gatewayInfo = []
+        gatewayInfo.append(client)
 
-                            #將此GW加入GW清單中
-                            _g_gatewayList.append(gatewayInfo)
-                            print ("[REGISTE] Gateway %s" % gatewayInfo) 
-                            ClientRegisted = True
-                             
-                    except:
-                        print("[ERROR] Couldn't converte json to Objet!")
+        ClientRegisted = False
 
-        try:
-            serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.error, msg:
-            sys.stderr.write("[ERROR] %s\n" % msg[1])
-            sys.exit(1)
+        while (True):
+            time.sleep(devicePollingInterval)
 
-        serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #reuse tcp
-        serverSocket.bind((_g_cst_SVSocketServerIP, _g_cst_SVSocketServerPort))
-        serverSocket.listen(_g_cst_MaxGatewayConnectionCount)
-        #serverSocket.settimeout(_g_cst_GatewayConnectionTimeOut)
+            _str_recvMsg = client.recv(256)
+            _str_decodeMsg = _str_recvMsg.decode('utf-8')
 
-        print('===============================================\n')
-        print('---------------Gateway->>>Server---------------\n')
-        print('>>>Start listen Gateways %s<<<' %(time.asctime(time.localtime(time.time()))))
-        print('===============================================\n')
-         
+            print("[MESSAGE] Reciving message from [Gateway] at %s : \n >>> %s <<<" % (
+                time.asctime(time.localtime(time.time())), _str_recvMsg))
 
-        while True:
-            (clientSocket, address) = serverSocket.accept()
-            print("[INFO] Client Info: ", clientSocket, address)
-            t = Thread(target=clientServiceThread,args=(clientSocket,))
-            t.start()
+            try:
+                _obj_json_msg = json.loads(_str_recvMsg)
+
+                _obj_json_msg["Server"] = _g_cst_serverName
+
+                if not ClientRegisted:
+                    gatewayInfo.append(_obj_json_msg["Gateway"])
+
+                    # 將此GW加入GW清單中
+                    _g_gatewayList.append(gatewayInfo)
+                    print ("[REGISTE] Gateway %s" % gatewayInfo)
+                    ClientRegisted = True;
+                else:
+                    RoutingGW(_obj_json_msg)
+
+            except:
+                ClientRegisted = False
+                print("[ERROR] Couldn't converte json to Objet!")
+
+    try:
+        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except socket.error, msg:
+        sys.stderr.write("[ERROR] %s\n" % msg[1])
+        sys.exit(1)
+
+    serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # reuse tcp
+    serverSocket.bind((_g_cst_SVSocketServerIP, _g_cst_SVSocketServerPort))
+    serverSocket.listen(_g_cst_MaxGatewayConnectionCount)
+    # serverSocket.settimeout(_g_cst_GatewayConnectionTimeOut)
+
+    print('===============================================\n')
+    print('---------------Gateway->>>Server---------------\n')
+    print('>>>Start listen Gateways %s<<<' % (time.asctime(time.localtime(time.time()))))
+    print('===============================================\n')
+
+    while True:
+        (clientSocket, address) = serverSocket.accept()
+        print("[INFO] Client Info: ", clientSocket, address)
+        t = Thread(target=clientServiceThread, args=(clientSocket,))
+        t.start()
+
+def RoutingGW(_obj_json_msg):
+
+    for gw_rule in _g_cst_GWRoute:
+
+        start_gw = gw_rule[0]
+        destination_gws = []
+        for i in range(1,len(gw_rule),1):
+            spreate_obj_json_msg = copy.copy(_obj_json_msg)
+            #destination_gws.append(gw_rule[i])
+            if(spreate_obj_json_msg["Gateway"] == start_gw):
+                spreate_obj_json_msg["Gateway"] = gw_rule[i]
+                #print spreate_obj_json_msg
+                RoutingDEVICE(spreate_obj_json_msg)
 
 
-t = Thread(target = serverSocketThread,args = ())
+def RoutingDEVICE(_obj_json_msg):
+
+    for device_rule in _g_cst_DEVICERoute:
+
+        start_device = device_rule[0]
+        destination_devices = []
+        for i in range(1,len(device_rule),1):
+            spreate_obj_json_msg = copy.copy(_obj_json_msg)
+            #destination_gws.append(gw_rule[i])
+            if(spreate_obj_json_msg["Device"] == start_device):
+                spreate_obj_json_msg["Device"] = device_rule[i]
+                if(spreate_obj_json_msg["Control"] == _g_cst_WhichTypeToTransport):
+                    spreate_obj_json_msg["Control"] = "SET" 
+                    RoutedSendToGW(spreate_obj_json_msg)
+                 
+def RoutedSendToGW(_obj_json_msg):
+    
+    spreate_obj_json_msg = copy.copy(_obj_json_msg)
+    for gw_client in _g_gatewayList:
+
+        if(gw_client[1]==spreate_obj_json_msg["Gateway"]):
+            print "Ready to transport message is: %s" % spreate_obj_json_msg
+            #轉成文字
+            _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
+            print "Ready to transport message is: %s" % _str_sendToGWJson
+            gw_client[0].send(_str_sendToGWJson)
+        else:
+            print "Destination GW:%s didn't online" % spreate_obj_json_msg["Gateway"]
+
+t = Thread(target=serverSocketThread, args=())
 t.start()
 
-  
-_g_instructionBuffer = [] 
+_g_instructionBuffer = []
 
 ########### WebSocket to SV ##############
- 
+
 # Called for every client connecting (after handshake)
 def new_client(client, server):
     print('===============================================')
     print('---------------Gateway->>>Server---------------\n')
-    print(">>>New client connected and was given id %d, handler %s, address %s<<<" %( client['id'], client['handler'], client['address']))
-    print('===============================================\n') 
+    print(">>>New client connected and was given id %d, handler %s, address %s<<<" % (
+        client['id'], client['handler'], client['address']))
+    print('===============================================\n')
 
-    #server.send_message_to_all("Hey all, a new client has joined us")
-    server.send_message(client,"Hi webclient") 
+    # server.send_message_to_all("Hey all, a new client has joined us")
+    server.send_message(client, "Hi webclient")
+
 
 # Called for every client disconnecting
 def client_left(client, server):
-	print("[INFO] Client(%d) disconnected" % client['id'])
+    print("[INFO] Client(%d) disconnected" % client['id'])
 
 
 # Called when a client sends a message
-def message_received(client, server, message): 
-        if len(message) > 200:
-                message = message[:200] + '..'
-        print("[INFO] Client(%d) said: %s" % (client['id'], message))
-        _g_instructionBuffer.append(message)
-                        
+def message_received(client, server, message):
+    if len(message) > 200:
+        message = message[:200] + '..'
+    print("[INFO] Client(%d) said: %s" % (client['id'], message))
+    _g_instructionBuffer.append(message)
 
-server = WebsocketServer(_g_cst_webSocketServerPORT, _g_cst_webSocketServerIP)
-server.set_fn_new_client(new_client)
-server.set_fn_client_left(client_left)
-server.set_fn_message_received(message_received)
-server.run_forever()
+
+WebServer = WebsocketServer(_g_cst_webSocketServerPORT, _g_cst_webSocketServerIP)
+WebServer.set_fn_new_client(new_client)
+WebServer.set_fn_client_left(client_left)
+WebServer.set_fn_message_received(message_received)
+WebServer.run_forever()
