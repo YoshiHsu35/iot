@@ -35,16 +35,16 @@ https://github.com/bblanchon/ArduinoJson
 EthernetClient client;
 unsigned long lastTime;
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xFD };
-//byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+//byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xFD };
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 
 //char hostname[] = "122.117.119.197";
 
-char hostname[] = "192.168.1.81";
-//char hostname[] = "192.168.1.31";
+//char hostname[] = "192.168.1.81";
+char hostname[] = "192.168.1.31";
 
-char Main_Device[] = "D1";
-//char Main_Device[] = "D2";
+//char Main_Device[] = "D1";
+char Main_Device[] = "D2";
 
 int port = 50000;
 const int LED_Pin = 4; //LED Pin.
@@ -64,7 +64,7 @@ const char* Com_Switch;
 String msgString_temp = "";
 String Compa_Str1 = "";
 String Compa_Str2 = "";
-char message[50];
+char message[100];
 
 unsigned long now = 0;
 
@@ -86,6 +86,8 @@ unsigned long now = 0;
 void setup() {
   Serial.begin(9600);
   pinMode(Button_Pin, INPUT);
+  pinMode(LED_Pin, OUTPUT);
+  digitalWrite(Button_Pin, HIGH);
   //attachInterrupt(interruptNumber, buttonStateChanged, HIGH);
 
   Serial.print("Connecting to GW, please wait.");
@@ -140,24 +142,25 @@ void loop() {
       }
     }
 
-    Serial.println("Recv from GW:");
-    Serial.print(message);
 
-    msgString_temp.toCharArray(message, msgString_temp.length() + 1); //Transfer String to char Array.
-    Process_SW_info(message);//Receive and process. Store information to spec var.
-
-    Node_Actions();
 
   }
 
   if ((now - lastTime) >= INT_INTERVAL) {// Send a message between a time interval
     lastTime = now;
+
     int btn_status = digitalRead(Button_Pin);
     Serial.print("Read Button:");
     Serial.println(btn_status);
 
+    Serial.println("Recv from GW:");
+    Serial.print(msgString_temp);
 
-    if (btn_status == HIGH)
+    msgString_temp.toCharArray(message, 100); //Transfer String to char Array.
+    Process_SW_info(message);//Receive and process. Store information to spec var.
+    Node_Actions();
+
+    if (btn_status == LOW)
     {
       StaticJsonBuffer<200> jsonBuffer;
       char jsonCharBuffer[256];
@@ -174,6 +177,10 @@ void loop() {
       Serial.println(jsonCharBuffer);
       client.print(jsonCharBuffer);
     }
+
+    msgString_temp = "";
+    Finish = false;
+    Receive = false;
 
     //檢查有沒有掉線，有的話自動重連
     if (!client.connected())
@@ -214,7 +221,20 @@ void Initial_String(String str1, String str2)
 
 void Node_Actions()
 {
-  //Node的動作
+  Serial.println(">>>in Node_Actions<<<");
 
+  Serial.println(Com_Switch);
+  Serial.println(Com_Control);
+  //Node的動作
+  if (Com_Switch == "ON" && Com_Control == "SWITCH")
+  {
+    digitalWrite(LED_Pin, HIGH);
+    Serial.println(">>>LED ON<<<");
+  }
+  else if (Com_Switch == "OFF" && Com_Control == "SWITCH")
+  {
+    digitalWrite(LED_Pin, LOW);
+    Serial.println(">>>LED OFF<<<");
+  }
 }
 
