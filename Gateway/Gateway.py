@@ -10,8 +10,8 @@ import copy
 import signal
 import sys
 
-_g_cst_gatewayName = "GW2"
-#_g_cst_gatewayName = "GW1"
+#_g_cst_gatewayName = "GW2"
+_g_cst_gatewayName = "GW1"
 
 _g_cst_ToServerSocketIP = "127.0.0.1"
 #_g_cst_ToServerSocketIP = "192.168.1.31"
@@ -45,46 +45,63 @@ def GatewayToServerSocketThread():
     devicePollingInterval = 1
     _b_isEstablishedConnect = False
 
-    while (not _b_isEstablishedConnect):
-        try:
-            ToServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.error, msg:
-            sys.stderr.write("[ERROR] %s\n" % msg[1])
-            sys.exit(1)
+    while(True):
 
-        try:
-            ToServerSocket.connect((_g_cst_ToServerSocketIP, _g_cst_GWSocketServerPort))
-
-            # 若與server連線建立成功，把這個連線存到server list，讓其他的部分可以調用傳訊息上Server
-            _g_serverList.append(ToServerSocket)
-            _b_isEstablishedConnect = True
-            print('===============================================\n')
-            print('---------------Gateway->>>Server---------------\n')
-            print('>>>Start connect Server %s<<<' % (time.asctime(time.localtime(time.time()))))
-            print('===============================================\n')
-        except socket.error, msg:
-            sys.stderr.write("[ERROR] Failed connecting to Server! %s\n" % msg[1])
-            exit(1)
-
-            # 向Server註冊
-        ToServerSocket.send('{"Gateway":"%s","Control":"REG"}' % (_g_cst_gatewayName))
-
-    while (_b_isEstablishedConnect):
-            time.sleep(devicePollingInterval)
-
-            _str_recvMsg = ToServerSocket.recv(256)
-            _str_decodeMsg = _str_recvMsg.decode('utf-8')
-
-            print("[MESSAGE] Reciving message from [Server] at %s : \n >>> %s <<<" % (
-                time.asctime(time.localtime(time.time())), _str_recvMsg))
+        while (not _b_isEstablishedConnect):
+            try:
+                ToServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            except socket.error, msg:
+                sys.stderr.write("[ERROR] %s\n" % msg[1])
+                sys.exit(1)
 
             try:
-                _obj_json_msg = json.loads(_str_recvMsg)
+                ToServerSocket.connect((_g_cst_ToServerSocketIP, _g_cst_GWSocketServerPort))
 
-            except:
-                print("[ERROR] Couldn't converte json to Objet!")
+                # 若與server連線建立成功，把這個連線存到server list，讓其他的部分可以調用傳訊息上Server
+                _g_serverList.append(ToServerSocket)
+                _b_isEstablishedConnect = True
+                print('===============================================\n')
+                print('---------------Gateway(%s)->>>Server---------------\n' % _g_cst_gatewayName)
+                print('>>>Start connect Server %s<<<' % (time.asctime(time.localtime(time.time()))))
+                print('===============================================\n')
 
-            RoutingNode(_obj_json_msg)
+
+                # 向Server註冊
+                print("[INFO] Connecting Server successful!\n")
+                ToServerSocket.send('{"Gateway":"%s","Control":"REG"}' % (_g_cst_gatewayName))
+
+            except socket.error, msg:
+                print("[ERROR] Failed connecting to Server! %s\n" % msg[1])
+                #exit(1)
+
+
+        while (_b_isEstablishedConnect):
+                time.sleep(devicePollingInterval)
+
+                try:
+                    _str_recvMsg = ToServerSocket.recv(256)
+
+                except socket.error, (value, message):
+                    print("[ERROR] Server Socket error, disconnected this socket. Error Message:%s" % message)
+                    ToServerSocket.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
+                    ToServerSocket.close()
+                    _g_serverList.remove(ToServerSocket)
+                    _b_isEstablishedConnect = False
+                    break
+
+
+                _str_decodeMsg = _str_recvMsg.decode('utf-8')
+
+                print("[MESSAGE] Reciving message from [Server] at %s : \n >>> %s <<<" % (
+                    time.asctime(time.localtime(time.time())), _str_recvMsg))
+
+                try:
+                    _obj_json_msg = json.loads(_str_recvMsg)
+
+                except:
+                    print("[ERROR] Couldn't converte json to Objet!")
+
+                RoutingNode(_obj_json_msg)
 
 
 def RoutingNode(_obj_json_msg):

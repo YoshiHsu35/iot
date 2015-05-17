@@ -4,6 +4,7 @@
 from websocket_server import WebsocketServer
 from threading import Thread
 import socket
+from gevent import Timeout
 import sys
 import time
 import json
@@ -15,6 +16,8 @@ _g_cst_SVSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERF
 _g_cst_SVSocketServerPort = 50005
 _g_cst_MaxGatewayConnectionCount = 10
 _g_cst_GatewayConnectionTimeOut = 1000
+
+_g_cst_socketClientTimeout = 60 # 60 second
 
 _g_cst_webSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
 _g_cst_webSocketServerPORT = 8009
@@ -54,30 +57,54 @@ def serverSocketThread():
         while (True):
             time.sleep(devicePollingInterval)
 
-            _str_recvMsg = client.recv(256)
-            _str_decodeMsg = _str_recvMsg.decode('utf-8')
+            _str_recvMsg = None
 
-            print("[MESSAGE] Reciving message from [Gateway] at %s : \n >>> %s <<<" % (
-                time.asctime(time.localtime(time.time())), _str_recvMsg))
+            with Timeout(_g_cst_socketClientTimeout, False):
+                try:
+                    _str_recvMsg = client.recv(256)
 
-            try:
-                _obj_json_msg = json.loads(_str_recvMsg)
+                except socket.error, (value,message):  
+                    print("[ERROR] Socket error, disconnected this socket. Error Message:%s" % message)
+                    client.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
+                    client.close()
+                    for gwinfo in _g_gatewayList:
+                        if gwinfo[1] == _obj_json_msg["Gateway"]:
+                            print ("[INFO] Remove Gateway: %s" % gwinfo[1])
+                            _g_gatewayList.remove(gwinfo)
+                    return
 
-                _obj_json_msg["Server"] = _g_cst_serverName
+                _str_decodeMsg = _str_recvMsg.decode('utf-8')
 
-                if not ClientRegisted:
-                    gatewayInfo.append(_obj_json_msg["Gateway"])
+                print("[MESSAGE] Reciving message from [Gateway] at %s : \n >>> %s <<<" % (
+                    time.asctime(time.localtime(time.time())), _str_recvMsg))
 
-                    # 將此GW加入GW清單中
-                    _g_gatewayList.append(gatewayInfo)
-                    print ("[REGISTE] Gateway %s" % gatewayInfo)
-                    ClientRegisted = True;
-                else:
-                    RoutingGW(_obj_json_msg)
+                try:
+                    _obj_json_msg = json.loads(_str_recvMsg)
 
-            except:
-                ClientRegisted = False
-                print("[ERROR] Couldn't converte json to Objet!")
+                    _obj_json_msg["Server"] = _g_cst_serverName
+
+                    if not ClientRegisted:
+                        gatewayInfo.append(_obj_json_msg["Gateway"])
+
+                        # 將此GW加入GW清單中
+                        _g_gatewayList.append(gatewayInfo)
+                        print ("[REGISTE] Gateway %s" % gatewayInfo)
+                        ClientRegisted = True
+                    else:
+                        RoutingGW(_obj_json_msg)
+
+                except:
+                    ClientRegisted = False
+                    print("[ERROR] Couldn't converte json to Objet!")
+
+            if _str_recvMsg is None:
+                client.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
+                client.close()
+                print("[ERROR] Socket timeout, disconnected this socket.")
+                for gwinfo in _g_gatewayList:
+                    if gwinfo[1] == _obj_json_msg["Gateway"]:
+                        _g_gatewayList.remove(gwinfo)
+                return
 
     try:
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
