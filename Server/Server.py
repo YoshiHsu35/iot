@@ -5,19 +5,19 @@ from websocket_server import WebsocketServer
 from threading import Thread
 import socket
 from gevent import Timeout
-import sys
 import time
 import json
 import copy
+import sys
 
 _g_cst_serverName = "SV1"
 
 _g_cst_SVSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
 _g_cst_SVSocketServerPort = 50005
 _g_cst_MaxGatewayConnectionCount = 10
-_g_cst_GatewayConnectionTimeOut = 1000
+_g_cst_GatewayConnectionTimeOut = 1000  #non-blocking寫法，目前無用，不要un-commit這個數值所使用的程式碼段落
 
-_g_cst_socketClientTimeout = 60 # 60 second
+_g_cst_socketClientTimeout = 120 # 如果在指定的秒數之內，gw都沒有訊息，視為time out 120 second
 
 _g_cst_webSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
 _g_cst_webSocketServerPORT = 8009
@@ -64,7 +64,7 @@ def serverSocketThread():
                     _str_recvMsg = client.recv(256)
 
                 except socket.error, (value,message):  
-                    print("[ERROR] Socket error, disconnected this socket. Error Message:%s" % message)
+                    print("[ERROR] Socket error, disconnected this gateway. Error Message:%s" % message)
                     client.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
                     client.close()
                     for gwinfo in _g_gatewayList:
@@ -100,16 +100,17 @@ def serverSocketThread():
             if _str_recvMsg is None:
                 client.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
                 client.close()
-                print("[ERROR] Socket timeout, disconnected this socket.")
+                print("[ERROR] Socket timeout, disconnected this gateway.")
                 for gwinfo in _g_gatewayList:
                     if gwinfo[1] == _obj_json_msg["Gateway"]:
+                        print ("[INFO] Remove Gateway: %s" % gwinfo[1])
                         _g_gatewayList.remove(gwinfo)
                 return
 
     try:
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except socket.error, msg:
-        sys.stderr.write("[ERROR] %s\n" % msg[1])
+        print("[ERROR] %s\n" % msg[1])
         sys.exit(1)
 
     serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # reuse tcp
