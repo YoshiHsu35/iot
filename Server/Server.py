@@ -24,7 +24,7 @@ _g_cst_webSocketServerPORT = 8009
 
 
 _g_cst_GWRoute = [['GW1','GW2'],['GW2','GW1']] #GW1->GW2, GW2->GW1 可支援串接例如['GW1','GW2','GW3']代表GW1->GW2,3
-_g_cst_DEVICERoute = [['D1','D2'],['D2','D2']]
+_g_cst_DEVICERoute = [['D1','D2'],['D2','D1']]
 _g_cst_WhichTypeToTransport ='REP'
 
 print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
@@ -157,21 +157,36 @@ def RoutingDEVICE(_obj_json_msg):
                 spreate_obj_json_msg["Device"] = device_rule[i]
                 if(spreate_obj_json_msg["Control"] == _g_cst_WhichTypeToTransport):
                     spreate_obj_json_msg["Control"] = "SET" 
+
+                    #需要customize, 先寫死
+                    spreate_obj_json_msg["LED"] = spreate_obj_json_msg["Switch"]
+
+                    spreate_obj_json_msg.pop("Switch", None)
+
                     RoutedSendToGW(spreate_obj_json_msg)
                  
 def RoutedSendToGW(_obj_json_msg):
+
+    isSendGatewaySuccess = False
     
     spreate_obj_json_msg = copy.copy(_obj_json_msg)
     for gw_client in _g_gatewayList:
 
         if(gw_client[1]==spreate_obj_json_msg["Gateway"]):
-            print "Ready to transport message is: %s" % spreate_obj_json_msg
             #轉成文字
             _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
             print "Ready to transport message is: %s" % _str_sendToGWJson
-            gw_client[0].send(_str_sendToGWJson)
-        else:
-            print "Destination GW:%s didn't online" % spreate_obj_json_msg["Gateway"]
+
+            try:
+                gw_client[0].send(_str_sendToGWJson)
+                isSendGatewaySuccess = True
+            except:
+                print "[ERROR] send to gateway have some error!"
+                isSendGatewaySuccess = False
+
+    if not isSendGatewaySuccess:
+        print "Destination GW:%s didn't online" % spreate_obj_json_msg["Gateway"]
+
 
 t = Thread(target=serverSocketThread, args=())
 t.start()
@@ -205,8 +220,8 @@ def message_received(client, server, message):
     _g_instructionBuffer.append(message)
 
 
-WebServer = WebsocketServer(_g_cst_webSocketServerPORT, _g_cst_webSocketServerIP)
-WebServer.set_fn_new_client(new_client)
-WebServer.set_fn_client_left(client_left)
-WebServer.set_fn_message_received(message_received)
-WebServer.run_forever()
+#WebServer = WebsocketServer(_g_cst_webSocketServerPORT, _g_cst_webSocketServerIP)
+#WebServer.set_fn_new_client(new_client)
+#WebServer.set_fn_client_left(client_left)
+#WebServer.set_fn_message_received(message_received)
+#WebServer.run_forever()

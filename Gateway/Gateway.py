@@ -12,8 +12,9 @@ import sys
 #_g_cst_gatewayName = "GW2"
 _g_cst_gatewayName = "GW1"
 
+
 _g_cst_ToServerSocketIP = "127.0.0.1"
-#_g_cst_ToServerSocketIP = "192.168.1.31"
+#_g_cst_ToServerSocketIP = "122.117.119.197"
 
 _g_cst_GWSocketServerPort = 50005
 
@@ -110,6 +111,8 @@ def RoutingNode(_obj_json_msg):
     spreate_obj_json_msg = copy.copy(_obj_json_msg)
     global _g_nodeList
 
+    isSendNodeSuccess = False
+
     for node_client in _g_nodeList:
 
         if(node_client[1]==spreate_obj_json_msg["Device"]):
@@ -119,10 +122,13 @@ def RoutingNode(_obj_json_msg):
             
             try:
                 node_client[0].send(_str_sendToGWJson)
+                isSendNodeSuccess = True
             except:
                 print "[ERROR] send to node have some error!"
-        else:
-            print "Destination Node:%s didn't online" % spreate_obj_json_msg["Device"]
+                isSendNodeSuccess = False
+
+    if not isSendNodeSuccess:
+        print "Destination Node:%s didn't online" % spreate_obj_json_msg["Device"]
 
 
 
