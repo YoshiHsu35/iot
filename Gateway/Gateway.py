@@ -8,6 +8,7 @@ import time
 import json
 import copy
 import sys
+import paho.mqtt.client as mqtt
 
 #_g_cst_gatewayName = "GW2"
 _g_cst_gatewayName = "GW1"
@@ -24,6 +25,15 @@ _g_cst_MaxNodeConnectionCount = 10
 _g_cst_NodeConnectionTimeOut = 1000  # non-blocking寫法，目前無用，不要un-commit這個數值所使用的程式碼段落
 
 _g_cst_socketClientTimeout = 120  # 如果在指定的秒數之內，gw都沒有訊息，視為time out 120 second
+
+_g_cst_ToMQTTTopicServerIP = "thkaw.no-ip.biz"
+_g_cst_ToMQTTTopicServerPort = "1883"
+
+_g_cst_MQTTTopicName = "NCKU/NEAT/TOPIC/01"
+
+
+_g_cst_ToGWProtocalHaveMQTT = True
+#_g_cst_ToGWProtocalHaveSocket = True #Default enable, can't disable for now
 
 
 print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
@@ -109,27 +119,30 @@ def GatewayToServerSocketThread():
 
 def RoutingNode(_obj_json_msg):
     spreate_obj_json_msg = copy.copy(_obj_json_msg)
-    global _g_nodeList
+    if (spreate_obj_json_msg["Gateway"]==_g_cst_gatewayName):
+        global _g_nodeList
 
-    isSendNodeSuccess = False
+        isSendNodeSuccess = False
 
-    for node_client in _g_nodeList:
+        for node_client in _g_nodeList:
 
-        if(node_client[1]==spreate_obj_json_msg["Device"]):
-            #轉成文字
-            _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
-            print "Ready to transport message is: %s" % _str_sendToGWJson
-            
-            try:
-                node_client[0].send(_str_sendToGWJson)
-                isSendNodeSuccess = True
-            except:
-                print "[ERROR] send to node have some error!"
-                isSendNodeSuccess = False
+            if(node_client[1]==spreate_obj_json_msg["Device"]):
+                #轉成文字
+                _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
+                print "Ready to transport message is: %s" % _str_sendToGWJson
 
-    if not isSendNodeSuccess:
-        print "Destination Node:%s didn't online" % spreate_obj_json_msg["Device"]
+                try:
+                    node_client[0].send(_str_sendToGWJson)
+                    isSendNodeSuccess = True
+                except:
+                    print "[ERROR] send to node have some error!"
+                    isSendNodeSuccess = False
 
+        if not isSendNodeSuccess:
+            print "Destination Node:%s didn't online" % spreate_obj_json_msg["Device"]
+
+    else:
+        print "[INFO] Receive message in wrong GW name!"
 
 
 t_GatewayServer = Thread(target=GatewayToServerSocketThread, args=())
@@ -246,3 +259,33 @@ def NodeToGatewaySocketThread():
 t_NodeGateway = Thread(target=NodeToGatewaySocketThread, args=())
 t_NodeGateway.start()
 
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print("[INFO] Connected MQTT Topic Server:"+ _g_cst_MQTTTopicName +" with result code "+str(rc))
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe(_g_cst_MQTTTopicName)
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    print("[INFO] MQTT message receive from Topic %s at %s :%s" %(msg.topic,time.asctime(time.localtime(time.time())), str(msg.payload)))
+
+    try:
+        _obj_json_msg = json.loads(msg.payload)
+        RoutingNode(_obj_json_msg)
+    except:
+        print("[ERROR] Couldn't converte json to Objet!")
+
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+
+client.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort, 60)
+
+# Blocking call that processes network traffic, dispatches callbacks and
+# handles reconnecting.
+# Other loop*() functions are available that give a threaded interface and a
+# manual interface.
+client.loop_forever()

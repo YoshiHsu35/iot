@@ -9,6 +9,7 @@ import time
 import json
 import copy
 import sys
+import paho.mqtt.client as mqtt
 
 _g_cst_serverName = "SV1"
 
@@ -21,6 +22,15 @@ _g_cst_socketClientTimeout = 120 # 如果在指定的秒數之內，gw都沒有�
 
 _g_cst_webSocketServerIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
 _g_cst_webSocketServerPORT = 8009
+
+_g_cst_ToMQTTTopicServerIP = "thkaw.no-ip.biz"
+_g_cst_ToMQTTTopicServerPort = "1883"
+
+_g_cst_MQTTTopicName = "NCKU/NEAT/TOPIC/01"
+
+
+_g_cst_ToGWProtocalHaveMQTT = True
+#_g_cst_ToGWProtocalHaveSocket = True #Default enable, can't disable for now
 
 
 _g_cst_GWRoute = [['GW1','GW2'],['GW2','GW1']] #GW1->GW2, GW2->GW1 可支援串接例如['GW1','GW2','GW3']代表GW1->GW2,3
@@ -107,6 +117,7 @@ def serverSocketThread():
                         _g_gatewayList.remove(gwinfo)
                 return
 
+
     try:
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except socket.error, msg:
@@ -168,13 +179,18 @@ def RoutingDEVICE(_obj_json_msg):
 def RoutedSendToGW(_obj_json_msg):
 
     isSendGatewaySuccess = False
-    
     spreate_obj_json_msg = copy.copy(_obj_json_msg)
+
+    #轉成文字
+    _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
+
+    #MQTT SV->GW單向傳輸
+    if(_g_cst_ToGWProtocalHaveMQTT):
+        MQTT_PublishMessage(_str_sendToGWJson)
+
     for gw_client in _g_gatewayList:
 
         if(gw_client[1]==spreate_obj_json_msg["Gateway"]):
-            #轉成文字
-            _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
             print "Ready to transport message is: %s" % _str_sendToGWJson
 
             try:
@@ -225,3 +241,19 @@ def message_received(client, server, message):
 #WebServer.set_fn_client_left(client_left)
 #WebServer.set_fn_message_received(message_received)
 #WebServer.run_forever()
+
+########### MQTT to GW ##############
+
+def MQTT_TEST():
+    print ">>MQTT Publishing test<<"
+    mqttc = mqtt.Client("python_pub")
+    mqttc.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort)
+    mqttc.publish(_g_cst_MQTTTopicName, "{\"Gateway\":\"GW1\",\"Device\":\"D1\",\"Control\":\"SET\",\"LED\":\"ON\"}")
+    mqttc.loop(2)  #timeout 2sec
+
+def MQTT_PublishMessage(message):
+    print "[INFO] MQTT Publishing message to topic: %s, Message:%s" % (_g_cst_MQTTTopicName, message)
+    mqttc = mqtt.Client("python_pub")
+    mqttc.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort)
+    mqttc.publish(_g_cst_MQTTTopicName,message)
+    mqttc.loop(2)  #timeout 2sec
