@@ -30,7 +30,7 @@ _g_cst_MQTTTopicName = "NCKU/NEAT/TOPIC/01"
 
 
 _g_cst_ToGWProtocalHaveMQTT = True
-#_g_cst_ToGWProtocalHaveSocket = True #Default enable, can't disable for now
+_g_cst_ToGWProtocalHaveSocket = False
 
 
 _g_cst_GWRoute = [['GW1','GW2'],['GW2','GW1']] #GW1->GW2, GW2->GW1 可支援串接例如['GW1','GW2','GW3']代表GW1->GW2,3
@@ -188,20 +188,21 @@ def RoutedSendToGW(_obj_json_msg):
     if(_g_cst_ToGWProtocalHaveMQTT):
         MQTT_PublishMessage(_str_sendToGWJson)
 
-    for gw_client in _g_gatewayList:
+    if(_g_cst_ToGWProtocalHaveSocket):
+        for gw_client in _g_gatewayList:
 
-        if(gw_client[1]==spreate_obj_json_msg["Gateway"]):
-            print "Ready to transport message is: %s" % _str_sendToGWJson
+            if(gw_client[1]==spreate_obj_json_msg["Gateway"]):
+                print "Ready to transport message is: %s" % _str_sendToGWJson
 
-            try:
-                gw_client[0].send(_str_sendToGWJson)
-                isSendGatewaySuccess = True
-            except:
-                print "[ERROR] send to gateway have some error!"
-                isSendGatewaySuccess = False
+                try:
+                    gw_client[0].send(_str_sendToGWJson)
+                    isSendGatewaySuccess = True
+                except:
+                    print "[ERROR] send to gateway have some error!"
+                    isSendGatewaySuccess = False
 
-    if not isSendGatewaySuccess:
-        print "Destination GW:%s didn't online" % spreate_obj_json_msg["Gateway"]
+        if not isSendGatewaySuccess:
+            print "Destination GW:%s didn't online" % spreate_obj_json_msg["Gateway"]
 
 
 t = Thread(target=serverSocketThread, args=())
