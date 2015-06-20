@@ -36,7 +36,7 @@ print("::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
 
 def main():
-    class_MQTTManager.SubscriberThreading("IOTSV/REG2").start()
+    class_MQTTManager.SubscriberThreading("IOTSV/REG").start()
 
     #sm = class_MQTTManager.SubscriberManager()
     #sm.subscribe("GW1")

@@ -10,50 +10,92 @@ import sys
 import class_MQTTManager
 import class_Obj
 import IoTServer
+import Rules
+import thread
 
 
 class DecisionAction():
-
     def Judge(self, _obj_json_msg):
         spreate_obj_json_msg = copy.copy(_obj_json_msg)
 
-        if (spreate_obj_json_msg["Control"]=="REG"):
-            print "Start subscriber TopicName: %s" % spreate_obj_json_msg["Gateway"]
+        ########## Control GWREG ##########
 
-            gwobj = class_Obj.GatewayObj(spreate_obj_json_msg["Gateway"])
-            IoTServer._globalGWList.append(gwobj)
-            for p in IoTServer._globalGWList: print("_globalGWList:"+gwobj.Name)
+        if (spreate_obj_json_msg["Control"] == "GWREG"):
+            print "[DecisionActions] Start subscriber TopicName: %s" % spreate_obj_json_msg["Gateway"]
 
+            ## 防止重複註冊
+            IsAlreadyREG = False
 
-            class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["Gateway"]).start()
+            for p in IoTServer._globalGWList:
+                if(p.Name == spreate_obj_json_msg["Gateway"]): IsAlreadyREG = True
+
+            if (not IsAlreadyREG):
+
+                gwobj = class_Obj.GatewayObj(spreate_obj_json_msg["Gateway"])
+                IoTServer._globalGWList.append(gwobj)
+
+                tempprint = "[DecisionActions] REG GW From %s ,_globalGWList:" % (gwobj.Name)
+                for p in IoTServer._globalGWList: tempprint += p.Name + ", "
+
+                print(tempprint)
+
+                class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["Gateway"]).start()
+
+            else:
+                print("[DecisionActions] REG GW Fail!, due to this GW already REG!")
+
+        ########## Control ADDNODE ##########
 
         elif (spreate_obj_json_msg["Control"] == "ADDNODE"):
+            print("[DecisionActions] Start AddNode")
+            IsAddNode = False
             for gwobj in IoTServer._globalGWList:
-                if(gwobj.Name == spreate_obj_json_msg["Gateway"]):
-                    print("yaaaaaaaaaa")
+                #print("Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
+                if (gwobj.Name == spreate_obj_json_msg["Gateway"]):
+                    #print("in Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
+
+                    for node in spreate_obj_json_msg["Nodes"]:
+                        nodeobj = class_Obj.NodeObj(node["Node"],node["NodeFunction"], node["Functions"])
+                        #print("in nodeobj "+str(nodeobj))
+                        gwobj.Nodes.append(nodeobj)
+                        print("[DecisionActions] ADDNODE From %s, NodeName is %s, NodeFunction is %s, Functions is %s" %
+                              (gwobj.Name, node["Node"],node["NodeFunction"], node["Functions"]))
+
+                        #for g in gwobj.Nodes:
+                        #    print(g.Functions)
+
+                    IsAddNode = True
+
+                    fsmapping = Rules.FunctionServerMappingRules()
+                    fsmapping.replyFSTopicToGW(spreate_obj_json_msg["Gateway"],gwobj.Nodes)
 
 
-            # global _g_nodeList
-            #
-            # isSendNodeSuccess = False
-            #
-            # for node_client in _g_nodeList:
-            #
-            #     if(node_client[1]==spreate_obj_json_msg["Device"]):
-            #         #轉成文字
-            #         _str_sendToGWJson = json.dumps(spreate_obj_json_msg)
-            #         print "Ready to transport message is: %s" % _str_sendToGWJson
-            #
-            #         try:
-            #             node_client[0].send(_str_sendToGWJson)
-            #             isSendNodeSuccess = True
-            #         except:
-            #             print "[ERROR] send to node have some error!"
-            #             isSendNodeSuccess = False
-            #
-            # if not isSendNodeSuccess:
-            #     print "Destination Node:%s didn't online" % spreate_obj_json_msg["Device"]
+            if (not IsAddNode):
+                print("[DecisionActions] ADDNODE Not found specific GW.")
+
+        ########## Control DELNODE ##########
+
+        elif (spreate_obj_json_msg["Control"] == "DELNODE"):
+            IsDelNode = False
+            jsonTempObj_Nodes = spreate_obj_json_msg["Nodes"]
+            for gwobj in IoTServer._globalGWList:
+                if (gwobj.Name == spreate_obj_json_msg["Gateway"]):
+                    for nodes in gwobj.Nodes:
+
+                        try:
+                            searchIndex = jsonTempObj_Nodes.index(nodes.Name)
+                            if(searchIndex>-1):
+                                print ("[DecisionActions] DELNODE remove %s" %(nodes.Name))
+                                gwobj.Nodes.remove(nodes)
+                                IsDelNode = True
+                        except:
+                            pass
+
+
+            if (not IsDelNode):
+                print("[DecisionActions] DELNODE Not found specific GW.")
 
         else:
-            print "[INFO] Receive message in wrong GW name!"
+            print "[DecisionActions] Receive message in wrong Control Signal! json:%s" %(spreate_obj_json_msg)
+
 
