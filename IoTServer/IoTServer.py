@@ -21,6 +21,7 @@ _g_cst_ToMQTTTopicServerPort = config_ServerIPList._g_cst_ToMQTTTopicServerPort
 
 
 _globalGWList = []
+_globalMANAGEDEVICEList = []
 
 print("::::::::::::::::::::::::::::::::::::::::::::::::")
 print("::::::::::::::::::::::::::::::::::::::::::::::::")

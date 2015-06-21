@@ -13,19 +13,17 @@ class FunctionServerMappingRules():
 
     def __init__(self):
         self.jsonObj = class_Obj.JSON_ADDFSIP()
-        self.jsonObj.Control = "ADDFSIP"
-
 
 
     def replyFSTopicToGW(self, topicName, GWObj):
-
+        self.jsonObj.Control = "ADDFSIP"
         for fsMappingRule in _g_FunctionServerMappingList:
 
             IsFSHaveNodeMapping = False
 
             #### ASSIGN TO M2M FS ####
             self.FSIP = class_Obj.FSIPObj()
-            self.FSIP.FunctionTopic=fsMappingRule[2] #FS1
+            self.FSIP.FunctionTopic=fsMappingRule[0] #FS1
             self.FSIP.Function=fsMappingRule[1] #M2M
             self.FSIP.IP = "0.0.0.0"
             self.FSIP.Nodes = []
@@ -39,6 +37,28 @@ class FunctionServerMappingRules():
             #如果規則中的function在GW下面的Node找不到，則不需要回傳該function所要的topic
             if(IsFSHaveNodeMapping):
                 self.jsonObj.FSIPs.append(self.FSIP)
+
+
+        jsonstring = self.jsonObj.to_JSON()
+
+        print("[Rules] ADDFSIP Send to topic:%s" %(topicName))
+
+        pm = class_MQTTManager.PublisherManager()
+        pm.MQTT_PublishMessage(topicName,jsonstring)
+
+    def replyFSTopicToMANAGEDEV(self, topicName):
+
+        for fsMappingRule in _g_FunctionServerMappingList:
+
+            IsFSHaveNodeMapping = False
+
+            #### ASSIGN TO M2M FS ####
+            self.FSIP = class_Obj.FSIPObj()
+            self.FSIP.FunctionTopic=fsMappingRule[0]
+            self.FSIP.Function=fsMappingRule[1]
+            self.FSIP.IP = "0.0.0.0"
+            del self.FSIP.Nodes #不需要這個屬性
+            self.jsonObj.FSIPs.append(self.FSIP)
 
 
         jsonstring = self.jsonObj.to_JSON()

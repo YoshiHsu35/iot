@@ -9,9 +9,9 @@ import copy
 import sys
 import class_MQTTManager
 import class_Obj
-import IoTServer
-import Rules
 import thread
+import M2MFunctionServer
+import M2MRule
 
 
 class DecisionAction():
@@ -21,10 +21,26 @@ class DecisionAction():
         ########## Control REQTOPICLIST ##########
 
         if (spreate_obj_json_msg["Control"] == "REQTOPICLIST"):
+            print "[DecisionActions] REQTOPICLIST TopicName: %s" % spreate_obj_json_msg["Gateway"]
+
+            m2mfsmrules = M2MRule.FunctionServerMappingRules()
+
+            m2mfsmrules.replyM2MTopicToGW("FS1",spreate_obj_json_msg["Gateway"])
 
 
-            ## TODO 補上REQTOPIC
-            A = 1
+        elif (spreate_obj_json_msg["Control"] == "GETRULE"):
+            m2mfsmrules = M2MRule.FunctionServerMappingRules()
+
+            m2mfsmrules.replyM2MRulesAll("FS1")
+
+
+        # elif (spreate_obj_json_msg["Control"] == "ADDRULE"):
+        #
+        #
+        # elif (spreate_obj_json_msg["Control"] == "UPDATERULE"):
+        #
+        #
+        # elif (spreate_obj_json_msg["Control"] == "DELRULE"):
 
 
         else:

@@ -95,6 +95,40 @@ class DecisionAction():
             if (not IsDelNode):
                 print("[DecisionActions] DELNODE Not found specific GW.")
 
+        ############### Manage Device ###############
+        #############################################
+        ########## Control MANAGEDEVICEREG ##########
+        #############################################
+
+        elif (spreate_obj_json_msg["Control"] == "MANAGEDEVICEREG"):
+            print "[DecisionActions] Start subscriber TopicName: %s" % spreate_obj_json_msg["Device"]
+
+            ## 防止重複註冊
+            IsAlreadyREG = False
+
+            for p in IoTServer._globalMANAGEDEVICEList:
+                if(p.Name == spreate_obj_json_msg["Device"]): IsAlreadyREG = True
+
+            if (not IsAlreadyREG):
+
+                manObj = class_Obj.ManageObj(spreate_obj_json_msg["Device"])
+                IoTServer._globalMANAGEDEVICEList.append(manObj)
+
+                tempprint = "[DecisionActions] REG MANAGEDEVICE From %s ,_globalMANAGEDEVICEList:" % (manObj.Name)
+                for p in IoTServer._globalMANAGEDEVICEList: tempprint += p.Name + ", "
+
+                print(tempprint)
+
+                class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["Device"]).start()
+
+            else:
+                print("[DecisionActions] REG MANAGEDEVICE Fail!, due to this MANAGEDEVICE already REG!")
+
+        ########## Control DEVICEREQFS ##########
+        elif (spreate_obj_json_msg["Control"] == "DEVICEREQFS"):
+            fsmapping = Rules.FunctionServerMappingRules()
+            fsmapping.replyFSTopicToMANAGEDEV(spreate_obj_json_msg["Device"])
+
         else:
             print "[DecisionActions] Receive message in wrong Control Signal! json:%s" %(spreate_obj_json_msg)
 
