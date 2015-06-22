@@ -7,7 +7,7 @@ def dummy_reg():
     publisherManager = class_MQTTManager.PublisherManager()
 
     time.sleep(.5)
-    #publisherManager.MQTT_PublishMessage("FS1", '{"Gateway": "GW1","Control":"REQTOPICLIST"}')
+    # publisherManager.MQTT_PublishMessage("FS1", '{"Gateway": "GW1","Control":"REQTOPICLIST"}')
     time.sleep(.5)
     publisherManager.MQTT_PublishMessage("FS1", '{"Gateway": "GW2","Control":"REQTOPICLIST"}')
 

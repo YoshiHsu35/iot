@@ -50,7 +50,7 @@ class SubscriberManager():
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, userdata, msg):
             print("[INFO] MQTT message receive from Topic %s at %s :%s" % (
-            msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
+                msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
 
             try:
                 # print("[INFO] Receive from MQTT %s" % msg.payload)

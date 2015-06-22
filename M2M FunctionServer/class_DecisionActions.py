@@ -25,25 +25,24 @@ class DecisionAction():
 
             m2mfsmrules = M2MRule.FunctionServerMappingRules()
 
-            m2mfsmrules.replyM2MTopicToGW("FS1",spreate_obj_json_msg["Gateway"])
+            m2mfsmrules.replyM2MTopicToGW("FS1", spreate_obj_json_msg["Gateway"])
 
 
         elif (spreate_obj_json_msg["Control"] == "GETRULE"):
             m2mfsmrules = M2MRule.FunctionServerMappingRules()
-
             m2mfsmrules.replyM2MRulesAll("FS1")
 
+        elif (spreate_obj_json_msg["Control"] == "ADDRULE"):
+            m2mfsmrules = M2MRule.FunctionServerMappingRules()
+            m2mfsmrules.AddM2MRule(spreate_obj_json_msg["Rules"])
 
-        # elif (spreate_obj_json_msg["Control"] == "ADDRULE"):
-        #
-        #
-        # elif (spreate_obj_json_msg["Control"] == "UPDATERULE"):
-        #
-        #
-        # elif (spreate_obj_json_msg["Control"] == "DELRULE"):
+        elif (spreate_obj_json_msg["Control"] == "UPDATERULE"):
+            m2mfsmrules = M2MRule.FunctionServerMappingRules()
+            m2mfsmrules.UpdateM2MRule(spreate_obj_json_msg["Rules"])
 
+        elif (spreate_obj_json_msg["Control"] == "DELRULE"):
+            m2mfsmrules = M2MRule.FunctionServerMappingRules()
+            m2mfsmrules.DelM2MRule(spreate_obj_json_msg["Rules"])
 
         else:
-            print "[DecisionActions] Receive message in wrong Control Signal! json:%s" %(spreate_obj_json_msg)
-
-
+            print "[DecisionActions] Receive message in wrong Control Signal! json:%s" % (spreate_obj_json_msg)

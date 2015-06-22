@@ -9,8 +9,7 @@ def dummy_reg():
         publisherManager.MQTT_PublishMessage("IOTSV/REG", '{ "Device": "P%s", "Control": "MANAGEDEVICEREG"}' % (x))
         time.sleep(1)
 
-
-    publisherManager.MQTT_PublishMessage("P1",'{"Device": "P1", "Control": "DEVICEREQFS"}' )
+    publisherManager.MQTT_PublishMessage("P1", '{"Device": "P1", "Control": "DEVICEREQFS"}')
     time.sleep(1)
 
     # publisherManager.MQTT_PublishMessage("GW1",'{"Gateway": "GW1","Control": "ADDNODE", "Nodes": [{"Node": "N1", "NodeFunction":"IOs", "Functions": ["LED1","LED2", "SW1"]}]}')

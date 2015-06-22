@@ -27,7 +27,7 @@ class DecisionAction():
             IsAlreadyREG = False
 
             for p in IoTServer._globalGWList:
-                if(p.Name == spreate_obj_json_msg["Gateway"]): IsAlreadyREG = True
+                if (p.Name == spreate_obj_json_msg["Gateway"]): IsAlreadyREG = True
 
             if (not IsAlreadyREG):
 
@@ -50,25 +50,24 @@ class DecisionAction():
             print("[DecisionActions] Start AddNode")
             IsAddNode = False
             for gwobj in IoTServer._globalGWList:
-                #print("Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
+                # print("Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
                 if (gwobj.Name == spreate_obj_json_msg["Gateway"]):
-                    #print("in Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
+                    # print("in Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
 
                     for node in spreate_obj_json_msg["Nodes"]:
-                        nodeobj = class_Obj.NodeObj(node["Node"],node["NodeFunction"], node["Functions"])
-                        #print("in nodeobj "+str(nodeobj))
+                        nodeobj = class_Obj.NodeObj(node["Node"], node["NodeFunction"], node["Functions"])
+                        # print("in nodeobj "+str(nodeobj))
                         gwobj.Nodes.append(nodeobj)
                         print("[DecisionActions] ADDNODE From %s, NodeName is %s, NodeFunction is %s, Functions is %s" %
-                              (gwobj.Name, node["Node"],node["NodeFunction"], node["Functions"]))
+                              (gwobj.Name, node["Node"], node["NodeFunction"], node["Functions"]))
 
-                        #for g in gwobj.Nodes:
+                        # for g in gwobj.Nodes:
                         #    print(g.Functions)
 
                     IsAddNode = True
 
                     fsmapping = Rules.FunctionServerMappingRules()
-                    fsmapping.replyFSTopicToGW(spreate_obj_json_msg["Gateway"],gwobj.Nodes)
-
+                    fsmapping.replyFSTopicToGW(spreate_obj_json_msg["Gateway"], gwobj.Nodes)
 
             if (not IsAddNode):
                 print("[DecisionActions] ADDNODE Not found specific GW.")
@@ -84,13 +83,12 @@ class DecisionAction():
 
                         try:
                             searchIndex = jsonTempObj_Nodes.index(nodes.Name)
-                            if(searchIndex>-1):
-                                print ("[DecisionActions] DELNODE remove %s" %(nodes.Name))
+                            if (searchIndex > -1):
+                                print ("[DecisionActions] DELNODE remove %s" % (nodes.Name))
                                 gwobj.Nodes.remove(nodes)
                                 IsDelNode = True
                         except:
                             pass
-
 
             if (not IsDelNode):
                 print("[DecisionActions] DELNODE Not found specific GW.")
@@ -107,7 +105,7 @@ class DecisionAction():
             IsAlreadyREG = False
 
             for p in IoTServer._globalMANAGEDEVICEList:
-                if(p.Name == spreate_obj_json_msg["Device"]): IsAlreadyREG = True
+                if (p.Name == spreate_obj_json_msg["Device"]): IsAlreadyREG = True
 
             if (not IsAlreadyREG):
 
@@ -130,6 +128,4 @@ class DecisionAction():
             fsmapping.replyFSTopicToMANAGEDEV(spreate_obj_json_msg["Device"])
 
         else:
-            print "[DecisionActions] Receive message in wrong Control Signal! json:%s" %(spreate_obj_json_msg)
-
-
+            print "[DecisionActions] Receive message in wrong Control Signal! json:%s" % (spreate_obj_json_msg)

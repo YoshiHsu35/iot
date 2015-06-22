@@ -12,7 +12,7 @@ import sys
 import class_DecisionActions
 
 
-#上層目錄
+# 上層目錄
 sys.path.append("..")
 import config_ServerIPList
 
@@ -22,13 +22,15 @@ _g_cst_ToMQTTTopicServerPort = config_ServerIPList._g_cst_ToMQTTTopicServerPort
 
 class SubscriberThreading(Thread):
     global topicName
-    def __init__(self,topicName):
+
+    def __init__(self, topicName):
         Thread.__init__(self)
         self.topicName = topicName
 
     def run(self):
         subscriberManager = SubscriberManager()
         subscriberManager.subscribe(self.topicName)
+
 
 # class DecisionActionsThreading(Thread):
 #     global _obj_json_msg
@@ -42,34 +44,34 @@ class SubscriberThreading(Thread):
 
 
 class SubscriberManager():
-
     def subscribe(self, topicName):
         self.topicName = topicName
         ########## MQTT Subscriber ##############
         # The callback for when the client receives a CONNACK response from the server.
         def on_connect(client, userdata, flags, rc):
 
-            print("[INFO] Connected MQTT Topic Server:"+ self.topicName +" with result code "+str(rc))
+            print("[INFO] Connected MQTT Topic Server:" + self.topicName + " with result code " + str(rc))
 
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
 
-            #print(type(self.topicName))
+            # print(type(self.topicName))
             client.subscribe(str(self.topicName))
 
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, userdata, msg):
-            print("[INFO] MQTT message receive from Topic %s at %s :%s" %(msg.topic,time.asctime(time.localtime(time.time())), str(msg.payload)))
+            print("[INFO] MQTT message receive from Topic %s at %s :%s" % (
+            msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
 
             try:
-                #print("[INFO] Receive from MQTT %s" % msg.payload)
+                # print("[INFO] Receive from MQTT %s" % msg.payload)
                 _obj_json_msg = json.loads(msg.payload)
 
-                #測試用的，後來不用特意另外開thread
-                #DecisionActionsThreading(_obj_json_msg).start();
+                # 測試用的，後來不用特意另外開thread
+                # DecisionActionsThreading(_obj_json_msg).start();
 
                 class_DecisionActions.DecisionAction().Judge(_obj_json_msg)
-            except (RuntimeError, TypeError, NameError),e:
+            except (RuntimeError, TypeError, NameError), e:
                 print("[ERROR] Couldn't converte json to Objet! Error Details:" + str(e))
 
         client = mqtt.Client()
@@ -88,12 +90,13 @@ class SubscriberManager():
 
 
 
-    ########### MQTT Publisher ##############
-class PublisherManager():
+        ########### MQTT Publisher ##############
 
-    def MQTT_PublishMessage(self, topicName,message):
+
+class PublisherManager():
+    def MQTT_PublishMessage(self, topicName, message):
         print "[INFO] MQTT Publishing message to topic: %s, Message:%s" % (topicName, message)
         mqttc = mqtt.Client("python_pub")
         mqttc.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort)
-        mqttc.publish(topicName,message)
-        mqttc.loop(2)  #timeout 2sec
+        mqttc.publish(topicName, message)
+        mqttc.loop(2)  # timeout 2sec
