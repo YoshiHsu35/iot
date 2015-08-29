@@ -9,7 +9,7 @@ import time
 import json
 import copy
 import sys
-import class_DecisionActions
+from .class_DecisionActions import *
 
 
 # 上層目錄
@@ -70,7 +70,7 @@ class SubscriberManager():
                 # 測試用的，後來不用特意另外開thread
                 # DecisionActionsThreading(_obj_json_msg).start();
 
-                class_DecisionActions.DecisionAction().Judge(_obj_json_msg)
+                DecisionAction().Judge(_obj_json_msg)
             except (RuntimeError, TypeError, NameError) as e:
                 print("[ERROR] Couldn't converte json to Objet! Error Details:" + str(e))
 
