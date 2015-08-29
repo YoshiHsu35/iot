@@ -8,7 +8,7 @@ import json
 import copy
 import sys
 
-import class_MQTTManager
+from .class_MQTTManager import *
 
 
 
@@ -36,7 +36,7 @@ print("::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
 
 def main():
-    class_MQTTManager.SubscriberThreading("IOTSV/REG").start()
+    SubscriberThreading("IOTSV/REG").start()
 
     # sm = class_MQTTManager.SubscriberManager()
     # sm.subscribe("GW1")

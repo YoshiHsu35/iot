@@ -3,8 +3,8 @@
 
 __author__ = 'Nathaniel'
 
-import class_Obj
-import class_MQTTManager
+from .class_Obj import *
+from .class_MQTTManager import *
 import json
 
 # 看到NodeFunction名為IOs的，代表該Node的訊息要Mapping到M2M的FS，他的TOPIC為FS1
@@ -14,7 +14,7 @@ _g_FunctionServerMappingList = [{"FunctionTopic": "FS1", "Function": "M2M", "Nod
 
 class FunctionServerMappingRules():
     def __init__(self):
-        self.jsonObj = class_Obj.JSON_ADDFSIP()
+        self.jsonObj = JSON_ADDFSIP()
 
     def replyFSTopicToGW(self, topicName, GWObj):
         self.jsonObj.Control = "ADDFSIP"
@@ -23,7 +23,7 @@ class FunctionServerMappingRules():
             IsFSHaveNodeMapping = False
 
             #### ASSIGN TO M2M FS ####
-            self.FSIP = class_Obj.FSIPObj()
+            self.FSIP = FSIPObj()
             self.FSIP.FunctionTopic = fsMappingRule["FunctionTopic"]  # FS1
             self.FSIP.Function = fsMappingRule["Function"]  # M2M
             self.FSIP.IP = "0.0.0.0"
@@ -43,7 +43,7 @@ class FunctionServerMappingRules():
 
         print("[Rules] ADDFSIP Send to topic:%s" % (topicName))
 
-        pm = class_MQTTManager.PublisherManager()
+        pm = PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
     def replyFSTopicToMANAGEDEV(self, topicName):
@@ -52,7 +52,7 @@ class FunctionServerMappingRules():
             IsFSHaveNodeMapping = False
 
             #### ASSIGN TO M2M FS ####
-            self.FSIP = class_Obj.FSIPObj()
+            self.FSIP = FSIPObj()
             self.FSIP.FunctionTopic = fsMappingRule["FunctionTopic"]
             self.FSIP.Function = fsMappingRule["Function"]
             self.FSIP.IP = "0.0.0.0"
@@ -63,5 +63,5 @@ class FunctionServerMappingRules():
 
         print("[Rules] ADDFSIP Send to topic:%s" % (topicName))
 
-        pm = class_MQTTManager.PublisherManager()
+        pm = PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)

@@ -8,7 +8,7 @@ import json
 import copy
 import sys
 
-import class_MQTTManager
+from .class_MQTTManager import *
 
 
 # 上層目錄
@@ -34,7 +34,7 @@ print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
 
 def main():
-    class_MQTTManager.SubscriberThreading("FS1").start()
+    SubscriberThreading("FS1").start()
 
 
 if __name__ == '__main__':

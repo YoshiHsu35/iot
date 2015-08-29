@@ -61,7 +61,7 @@ class SubscriberManager():
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, userdata, msg):
             print("[INFO] MQTT message receive from Topic %s at %s :%s" % (
-            msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
+                msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
 
             try:
                 # print("[INFO] Receive from MQTT %s" % msg.payload)
@@ -71,7 +71,7 @@ class SubscriberManager():
                 # DecisionActionsThreading(_obj_json_msg).start();
 
                 class_DecisionActions.DecisionAction().Judge(_obj_json_msg)
-            except (RuntimeError, TypeError, NameError), e:
+            except (RuntimeError, TypeError, NameError) as e:
                 print("[ERROR] Couldn't converte json to Objet! Error Details:" + str(e))
 
         client = mqtt.Client()
@@ -95,7 +95,7 @@ class SubscriberManager():
 
 class PublisherManager():
     def MQTT_PublishMessage(self, topicName, message):
-        print "[INFO] MQTT Publishing message to topic: %s, Message:%s" % (topicName, message)
+        print("[INFO] MQTT Publishing message to topic: %s, Message:%s" % (topicName, message))
         mqttc = mqtt.Client("python_pub")
         mqttc.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort)
         mqttc.publish(topicName, message)

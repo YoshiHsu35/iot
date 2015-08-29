@@ -57,7 +57,7 @@ class SubscriberManager():
                 _obj_json_msg = json.loads(msg.payload)
 
                 class_DecisionActions.DecisionAction().Judge(_obj_json_msg)
-            except (RuntimeError, TypeError, NameError), e:
+            except (RuntimeError, TypeError, NameError) as e:
                 print("[ERROR] Couldn't converte json to Objet! Error Details:" + str(e))
 
         client = mqtt.Client()
@@ -81,7 +81,7 @@ class SubscriberManager():
 
 class PublisherManager():
     def MQTT_PublishMessage(self, topicName, message):
-        print "[INFO] MQTT Publishing message to topic: %s, Message:%s" % (topicName, message)
+        print("[INFO] MQTT Publishing message to topic: %s, Message:%s" % (topicName, message))
         mqttc = mqtt.Client("python_pub")
         mqttc.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort)
         mqttc.publish(topicName, message)

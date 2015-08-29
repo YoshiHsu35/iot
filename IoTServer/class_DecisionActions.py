@@ -7,11 +7,10 @@ import time
 import json
 import copy
 import sys
-import class_MQTTManager
-import class_Obj
+from .class_MQTTManager import *
+from .class_Obj import *
 import IoTServer
-import Rules
-import thread
+from .Rules import *
 
 
 class DecisionAction():
@@ -21,7 +20,7 @@ class DecisionAction():
         ########## Control GWREG ##########
 
         if (spreate_obj_json_msg["Control"] == "GWREG"):
-            print "[DecisionActions] Start subscriber TopicName: %s" % spreate_obj_json_msg["Gateway"]
+            print("[DecisionActions] Start subscriber TopicName: %s" % spreate_obj_json_msg["Gateway"])
 
             ## 防止重複註冊
             IsAlreadyREG = False
@@ -31,7 +30,7 @@ class DecisionAction():
 
             if (not IsAlreadyREG):
 
-                gwobj = class_Obj.GatewayObj(spreate_obj_json_msg["Gateway"])
+                gwobj = GatewayObj(spreate_obj_json_msg["Gateway"])
                 IoTServer._globalGWList.append(gwobj)
 
                 tempprint = "[DecisionActions] REG GW From %s ,_globalGWList:" % (gwobj.Name)
@@ -39,7 +38,7 @@ class DecisionAction():
 
                 print(tempprint)
 
-                class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["Gateway"]).start()
+                SubscriberThreading(spreate_obj_json_msg["Gateway"]).start()
 
             else:
                 print("[DecisionActions] REG GW Fail!, due to this GW already REG!")
@@ -55,7 +54,7 @@ class DecisionAction():
                     # print("in Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
 
                     for node in spreate_obj_json_msg["Nodes"]:
-                        nodeobj = class_Obj.NodeObj(node["Node"], node["NodeFunction"], node["Functions"])
+                        nodeobj = NodeObj(node["Node"], node["NodeFunction"], node["Functions"])
                         # print("in nodeobj "+str(nodeobj))
                         gwobj.Nodes.append(nodeobj)
                         print("[DecisionActions] ADDNODE From %s, NodeName is %s, NodeFunction is %s, Functions is %s" %
@@ -66,7 +65,7 @@ class DecisionAction():
 
                     IsAddNode = True
 
-                    fsmapping = Rules.FunctionServerMappingRules()
+                    fsmapping = FunctionServerMappingRules()
                     fsmapping.replyFSTopicToGW(spreate_obj_json_msg["Gateway"], gwobj.Nodes)
 
             if (not IsAddNode):
@@ -84,7 +83,7 @@ class DecisionAction():
                         try:
                             searchIndex = jsonTempObj_Nodes.index(nodes.Name)
                             if (searchIndex > -1):
-                                print ("[DecisionActions] DELNODE remove %s" % (nodes.Name))
+                                print("[DecisionActions] DELNODE remove %s" % (nodes.Name))
                                 gwobj.Nodes.remove(nodes)
                                 IsDelNode = True
                         except:
@@ -99,7 +98,7 @@ class DecisionAction():
         #############################################
 
         elif (spreate_obj_json_msg["Control"] == "MANAGEDEVICEREG"):
-            print "[DecisionActions] Start subscriber TopicName: %s" % spreate_obj_json_msg["Device"]
+            print("[DecisionActions] Start subscriber TopicName: %s" % spreate_obj_json_msg["Device"])
 
             ## 防止重複註冊
             IsAlreadyREG = False
@@ -109,7 +108,7 @@ class DecisionAction():
 
             if (not IsAlreadyREG):
 
-                manObj = class_Obj.ManageObj(spreate_obj_json_msg["Device"])
+                manObj = ManageObj(spreate_obj_json_msg["Device"])
                 IoTServer._globalMANAGEDEVICEList.append(manObj)
 
                 tempprint = "[DecisionActions] REG MANAGEDEVICE From %s ,_globalMANAGEDEVICEList:" % (manObj.Name)
@@ -117,15 +116,15 @@ class DecisionAction():
 
                 print(tempprint)
 
-                class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["Device"]).start()
+                SubscriberThreading(spreate_obj_json_msg["Device"]).start()
 
             else:
                 print("[DecisionActions] REG MANAGEDEVICE Fail!, due to this MANAGEDEVICE already REG!")
 
         ########## Control DEVICEREQFS ##########
         elif (spreate_obj_json_msg["Control"] == "DEVICEREQFS"):
-            fsmapping = Rules.FunctionServerMappingRules()
+            fsmapping = FunctionServerMappingRules()
             fsmapping.replyFSTopicToMANAGEDEV(spreate_obj_json_msg["Device"])
 
         else:
-            print "[DecisionActions] Receive message in wrong Control Signal! json:%s" % (spreate_obj_json_msg)
+            print("[DecisionActions] Receive message in wrong Control Signal! json:%s" % (spreate_obj_json_msg))
