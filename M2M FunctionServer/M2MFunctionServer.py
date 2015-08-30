@@ -8,7 +8,7 @@ import json
 import copy
 import sys
 
-from .class_MQTTManager import *
+from class_MQTTManager import *
 
 
 # 上層目錄

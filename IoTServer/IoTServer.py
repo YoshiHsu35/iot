@@ -4,13 +4,16 @@ from threading import Thread
 
 __author__ = 'Nathaniel'
 
+import os
 import json
 import copy
 import sys
 
-from .class_MQTTManager import *
+# PACKAGE_PARENT = '..'
+# SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+# sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-
+from class_MQTTManager import *
 
 # 上層目錄
 sys.path.append("..")

@@ -9,7 +9,7 @@ import time
 import json
 import copy
 import sys
-from .class_DecisionActions import *
+from class_DecisionActions import *
 
 
 # 上層目錄

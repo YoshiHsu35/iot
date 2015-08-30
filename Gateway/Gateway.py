@@ -13,10 +13,10 @@ import paho.mqtt.client as mqtt
 # _g_cst_gatewayName = "GW2"
 _g_cst_gatewayName = "GW1"
 
-_g_cst_ToServerSocketIP = "127.0.0.1"
-# _g_cst_ToServerSocketIP = "122.117.119.197"
+_g_cst_ToIoTServerSocketIP = "127.0.0.1"
+# _g_cst_ToIoTServerSocketIP = "122.117.119.197"
 
-_g_cst_GWSocketServerPort = 50005
+_g_cst_GWSocketIoTServerPort = 50005
 
 _g_cst_NodeToGWSocketIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
 _g_cst_NodeToGWSocketPort = 50000
@@ -25,7 +25,8 @@ _g_cst_NodeConnectionTimeOut = 1000  # non-blocking寫法，目前無用，不�
 
 _g_cst_socketClientTimeout = 120  # 如果在指定的秒數之內，gw都沒有訊息，視為time out 120 second
 
-_g_cst_ToMQTTTopicServerIP = "thkaw.no-ip.biz"
+_g_cst_ToMQTTTopicServerIP = "192.168.1.70"
+#_g_cst_ToMQTTTopicServerIP = "thkaw.no-ip.biz"
 _g_cst_ToMQTTTopicServerPort = "1883"
 
 _g_cst_MQTTTopicName = "NCKU/NEAT/TOPIC/01"
@@ -47,12 +48,12 @@ print(":......::::..:::::..:::::..:::::........:::...::...:::..:::::..:::::..:::
 print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
 
-########### Normal Socket to Server(As socket client) ##############
+########### Normal Socket to IoTServer(As socket client) ##############
 
-_g_serverList = []
+_g_IoTServerList = []
 
 
-def GatewayToServerSocketThread():
+def GatewayToIoTServerSocketThread():
     devicePollingInterval = 1
     _b_isEstablishedConnect = False
 
@@ -60,48 +61,48 @@ def GatewayToServerSocketThread():
 
         while (not _b_isEstablishedConnect):
             try:
-                ToServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                ToIoTServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             except socket.error as msg:
                 sys.stderr.write("[ERROR] %s\n" % msg[1])
                 sys.exit(1)
 
             try:
-                ToServerSocket.connect((_g_cst_ToServerSocketIP, _g_cst_GWSocketServerPort))
+                ToIoTServerSocket.connect((_g_cst_ToIoTServerSocketIP, _g_cst_GWSocketIoTServerPort))
 
-                # 若與server連線建立成功，把這個連線存到server list，讓其他的部分可以調用傳訊息上Server
-                _g_serverList.append(ToServerSocket)
+                # 若與IoTServer連線建立成功，把這個連線存到IoTServer list，讓其他的部分可以調用傳訊息上IoTServer
+                _g_IoTServerList.append(ToIoTServerSocket)
                 _b_isEstablishedConnect = True
                 print('===============================================\n')
-                print('---------------Gateway(%s)->>>Server---------------\n' % _g_cst_gatewayName)
-                print('>>>Start connect Server %s<<<' % (time.asctime(time.localtime(time.time()))))
+                print('---------------Gateway(%s)->>>IoTServer---------------\n' % _g_cst_gatewayName)
+                print('>>>Start connect IoTServer %s<<<' % (time.asctime(time.localtime(time.time()))))
                 print('===============================================\n')
 
 
-                # 向Server註冊
-                print("[INFO] Connecting Server successful!\n")
-                ToServerSocket.send('{"Gateway":"%s","Control":"REG"}' % (_g_cst_gatewayName))
+                # 向IoTServer註冊
+                print("[INFO] Connecting IoTServer successful!\n")
+                ToIoTServerSocket.send('{"Gateway":"%s","Control":"REG"}' % (_g_cst_gatewayName))
 
             except socket.error as msg:
-                print("[ERROR] Failed connecting to Server! %s\n" % msg[1])
+                print("[ERROR] Failed connecting to IoTServer! %s\n" % msg[1])
                 # exit(1)
 
         while (_b_isEstablishedConnect):
             time.sleep(devicePollingInterval)
 
             try:
-                _str_recvMsg = ToServerSocket.recv(256)
+                _str_recvMsg = ToIoTServerSocket.recv(256)
 
             except socket.error as message:
-                print("[ERROR] Server Socket error, disconnected this Server. Error Message:%s" % message)
-                ToServerSocket.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both
-                ToServerSocket.close()
-                _g_serverList.remove(ToServerSocket)
+                print("[ERROR] IoTServer Socket error, disconnected this IoTServer. Error Message:%s" % message)
+                ToIoTServerSocket.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both
+                ToIoTServerSocket.close()
+                _g_IoTServerList.remove(ToIoTServerSocket)
                 _b_isEstablishedConnect = False
                 break
 
             _str_decodeMsg = _str_recvMsg.decode('utf-8')
 
-            print("[MESSAGE] Reciving message from [Server] at %s : \n >>> %s <<<" % (
+            print("[MESSAGE] Reciving message from [IoTServer] at %s : \n >>> %s <<<" % (
                 time.asctime(time.localtime(time.time())), _str_recvMsg))
 
             try:
@@ -141,8 +142,8 @@ def RoutingNode(_obj_json_msg):
         print("[INFO] Receive message in wrong GW name!")
 
 
-t_GatewayServer = Thread(target=GatewayToServerSocketThread, args=())
-t_GatewayServer.start()
+t_GatewayIoTServer = Thread(target=GatewayToIoTServerSocketThread, args=())
+t_GatewayIoTServer.start()
 
 
 ########### Normal Socket to Nodes(As socket Server) ##############
@@ -201,8 +202,8 @@ def NodeToGatewaySocketThread():
                 print("[ERROR] Couldn't converte json to Objet!")
 
             try:
-                # 從ServerList裡面挑第一個Server送Json字串上去
-                _g_serverList[0].send(_str_sendToSvJson)
+                # 從IoTServerList裡面挑第一個IoTServer送Json字串上去
+                _g_IoTServerList[0].send(_str_sendToSvJson)
 
                 # 成功後再註冊DEVICE
                 if not ClientRegisted:
@@ -214,7 +215,7 @@ def NodeToGatewaySocketThread():
 
             except:
                 ClientRegisted = False
-                print("[ERROR] No Server connected yet!")
+                print("[ERROR] No IoTServer connected yet!")
 
             if _str_recvMsg is None:
                 client.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both

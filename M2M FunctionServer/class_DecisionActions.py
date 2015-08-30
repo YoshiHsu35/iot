@@ -7,10 +7,10 @@ import time
 import json
 import copy
 import sys
-from .class_MQTTManager import *
-from .class_Obj import *
-from .M2MFunctionServer import *
-from .M2MRule import *
+from class_MQTTManager import *
+from class_Obj import *
+from M2MFunctionServer import *
+from M2MRule import *
 
 
 class DecisionAction():

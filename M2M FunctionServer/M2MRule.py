@@ -3,8 +3,8 @@
 
 __author__ = 'Nathaniel'
 
-from .class_Obj import *
-from .class_MQTTManager import *
+from class_Obj import *
+from class_MQTTManager import *
 import json
 import copy
 

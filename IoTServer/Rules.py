@@ -3,8 +3,8 @@
 
 __author__ = 'Nathaniel'
 
-from .class_Obj import *
-from .class_MQTTManager import *
+from class_Obj import *
+from class_MQTTManager import *
 import json
 
 # 看到NodeFunction名為IOs的，代表該Node的訊息要Mapping到M2M的FS，他的TOPIC為FS1

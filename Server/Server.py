@@ -4,7 +4,7 @@
 from websocket_server import WebsocketServer
 from threading import Thread
 import socket
-from gevent import Timeout
+#from gevent import Timeout
 import time
 import json
 import copy
@@ -73,7 +73,7 @@ def serverSocketThread():
                 try:
                     _str_recvMsg = client.recv(256)
 
-                except socket.error, (value,message):  
+                except socket.error as,message:
                     print("[ERROR] Socket error, disconnected this gateway. Error Message:%s" % message)
                     client.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
                     client.close()

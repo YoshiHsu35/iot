@@ -1,5 +1,5 @@
 __author__ = 'Nathaniel'
-from .class_MQTTManager import *
+from class_MQTTManager import *
 import time
 
 
