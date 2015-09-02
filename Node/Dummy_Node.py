@@ -40,7 +40,7 @@ def main():
 
 
 def initREG():
-    initMSGObj = {'NodeUUID': "NODE-" + str(_g_NodeUUID), 'Control': 'REG', 'NodeFunction': 'IOs',
+    initMSGObj = {'Node': "NODE-" + str(_g_NodeUUID), 'Control': 'REG', 'NodeFunction': 'IOs',
                   'Functions': ["LED1", "LED2", "SW1"]}
     initMSGSTR = json.dumps(initMSGObj)
     now = time.strftime("%c")
