@@ -1,10 +1,10 @@
 __author__ = 'Nathaniel'
-from class_MQTTManager import *
+import class_MQTTManager
 import time
 
 
 def dummy_reg():
-    publisherManager = PublisherManager()
+    publisherManager = class_MQTTManager.PublisherManager()
 
     time.sleep(.5)
     # publisherManager.MQTT_PublishMessage("FS1", '{"Gateway": "GW1","Control":"REQTOPICLIST"}')

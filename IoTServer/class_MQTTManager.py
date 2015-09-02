@@ -9,8 +9,8 @@ import time
 import json
 import copy
 import sys
-from class_DecisionActions import *
-
+import class_DecisionActions
+from terminalColor import bcolors
 
 # 上層目錄
 sys.path.append("..")
@@ -50,7 +50,8 @@ class SubscriberManager():
         # The callback for when the client receives a CONNACK response from the server.
         def on_connect(client, userdata, flags, rc):
 
-            print("[INFO] Connected MQTT Topic Server:" + self.topicName + " with result code " + str(rc))
+            print(bcolors.WARNING + "[INFO] Connected MQTT Topic Server:" + self.topicName + " with result code " + str(
+                rc) + bcolors.ENDC)
 
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
@@ -60,32 +61,33 @@ class SubscriberManager():
 
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, userdata, msg):
-            print("[INFO] MQTT message receive from Topic %s at %s :%s" % (
-                msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
+            print(bcolors.WARNING + "[INFO] MQTT message receive from Topic %s at %s :%s" % (
+                msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)) + bcolors.ENDC)
 
             try:
                 # print("[INFO] Receive from MQTT %s" % msg.payload)
-                _obj_json_msg = json.loads(msg.payload)
+                _obj_json_msg = json.loads(str(msg.payload, encoding='UTF-8'))
 
                 # 測試用的，後來不用特意另外開thread
                 # DecisionActionsThreading(_obj_json_msg).start();
 
-                DecisionAction().Judge(_obj_json_msg)
+                class_DecisionActions.DecisionAction().Judge(_obj_json_msg)
             except (RuntimeError, TypeError, NameError) as e:
-                print("[ERROR] Couldn't converte json to Objet! Error Details:" + str(e))
+                raise
+                print(bcolors.FAIL + "[ERROR] Couldn't converte json to Objet! Error Details:" + str(e) + bcolors.ENDC)
 
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
 
-        client.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort, 60)
+        client.connect(_g_cst_ToMQTTTopicServerIP, int(_g_cst_ToMQTTTopicServerPort), 60)
 
         # Blocking call that processes network traffic, dispatches callbacks and
         # handles reconnecting.
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
 
-        print("[INFO] Subscribe TopicName:" + self.topicName)
+        print(bcolors.WARNING + "[INFO] Subscribe TopicName:" + self.topicName + bcolors.ENDC)
         client.loop_forever()
 
 
@@ -95,8 +97,9 @@ class SubscriberManager():
 
 class PublisherManager():
     def MQTT_PublishMessage(self, topicName, message):
-        print("[INFO] MQTT Publishing message to topic: %s, Message:%s" % (topicName, message))
+        print(bcolors.WARNING + "[INFO] MQTT Publishing message to topic: %s, Message:%s" % (
+        topicName, message) + bcolors.ENDC)
         mqttc = mqtt.Client("python_pub")
-        mqttc.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort)
+        mqttc.connect(_g_cst_ToMQTTTopicServerIP, int(_g_cst_ToMQTTTopicServerPort))
         mqttc.publish(topicName, message)
         mqttc.loop(2)  # timeout 2sec

@@ -9,6 +9,7 @@ import copy
 import sys
 import Subscriber_action
 import Publisher_action
+from terminalColor import bcolors
 
 _g_cst_gatewayName = "GW1"
 # _g_cst_gatewayName = "GW2"
@@ -26,17 +27,17 @@ ReplyTopicList = False
 # _g_cst_ToGWProtocalHaveSocket = True #Default enable, can't disable for now
 _g_nodeList = []
 
-print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
-print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
-print(":'######::::::'###::::'########:'########:'##:::::'##::::'###::::'##:::'##:")
-print("'##... ##::::'## ##:::... ##..:: ##.....:: ##:'##: ##:::'## ##:::. ##:'##::")
-print(" ##:::..::::'##:. ##::::: ##:::: ##::::::: ##: ##: ##::'##:. ##:::. ####:::")
-print(" ##::'####:'##:::. ##:::: ##:::: ######::: ##: ##: ##:'##:::. ##:::. ##::::")
-print(" ##::: ##:: #########:::: ##:::: ##...:::: ##: ##: ##: #########:::: ##::::")
-print(" ##::: ##:: ##.... ##:::: ##:::: ##::::::: ##: ##: ##: ##.... ##:::: ##::::")
-print(". ######::: ##:::: ##:::: ##:::: ########:. ###. ###:: ##:::: ##:::: ##::::")
-print(":......::::..:::::..:::::..:::::........:::...::...:::..:::::..:::::..:::::")
-print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
+print(bcolors.HEADER + ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)
+print(bcolors.HEADER + ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)
+print(bcolors.HEADER + ":'######::::::'###::::'########:'########:'##:::::'##::::'###::::'##:::'##:" + bcolors.ENDC)
+print(bcolors.HEADER + "'##... ##::::'## ##:::... ##..:: ##.....:: ##:'##: ##:::'## ##:::. ##:'##::" + bcolors.ENDC)
+print(bcolors.HEADER + " ##:::..::::'##:. ##::::: ##:::: ##::::::: ##: ##: ##::'##:. ##:::. ####:::" + bcolors.ENDC)
+print(bcolors.HEADER + " ##::'####:'##:::. ##:::: ##:::: ######::: ##: ##: ##:'##:::. ##:::. ##::::" + bcolors.ENDC)
+print(bcolors.HEADER + " ##::: ##:: #########:::: ##:::: ##...:::: ##: ##: ##: #########:::: ##::::" + bcolors.ENDC)
+print(bcolors.HEADER + " ##::: ##:: ##.... ##:::: ##:::: ##::::::: ##: ##: ##: ##.... ##:::: ##::::" + bcolors.ENDC)
+print(bcolors.HEADER + ". ######::: ##:::: ##:::: ##:::: ########:. ###. ###:: ##:::: ##:::: ##::::" + bcolors.ENDC)
+print(bcolors.HEADER + ":......::::..:::::..:::::..:::::........:::...::...:::..:::::..:::::..:::::" + bcolors.ENDC)
+print(bcolors.HEADER + ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n" + bcolors.ENDC)
 
 
 # Connect to MQTT Server for communication
@@ -44,24 +45,24 @@ def GatewayToServerMQTTThread():
     _b_MQTTConnected = False
     global publisher
     publisher = Publisher_action.PublisherManager()
-    try:
-        print('===============================================\n')
-        print('---------------Gateway(%s)--->>>Server in MQTT-\n' % _g_cst_gatewayName)
-        print('>>>Start connect Server %s<<<' % (time.asctime(time.localtime(time.time()))))
-        print('===============================================\n')
-        print('Register to IoT Server successful! \n')
-    except:
-        sys.stderr.write("[ERROR] The MQTT connect is broken.\n")
-        sys.exit(1)
+    print(bcolors.HEADER + '===============================================\n' + bcolors.ENDC)
+    print(bcolors.HEADER + '---------------Gateway(%s)--->>>Server in MQTT-\n' % _g_cst_gatewayName + bcolors.ENDC)
+    print(bcolors.HEADER + '>>>Start connect Server %s<<<' % (
+        time.asctime(time.localtime(time.time()))) + bcolors.ENDC)
+    print(bcolors.HEADER + '===============================================\n' + bcolors.ENDC)
+    print(bcolors.HEADER + 'Register to IoT Server successful! \n' + bcolors.ENDC)
+
     try:
         REGMSG = '{"Gateway": "%s","Control": "GWREG"}' % _g_cst_gatewayName
-        Publisher_action.PublisherManager().MQTT_PublishMessage(REGMSG, _g_cst_MQTTRegTopicName)
+        publisher.MQTT_PublishMessage(REGMSG, _g_cst_MQTTRegTopicName)
 
         Subscriber_action.SubscriberThreading(str(_g_cst_MQTTRegTopicName)).start()
+        # 訂閱自身名稱的topic
+        Subscriber_action.SubscriberThreading(_g_cst_MQTTAcTopicName).start()
 
         _b_MQTTConnected = True
-    except all, e:
-        print "[INFO]Register error." + str(e)
+    except (RuntimeError, TypeError, NameError) as e:
+        print(bcolors.FAIL + "[INFO]Register error." + str(e) + bcolors.ENDC)
         sys.exit(1)
 
 
@@ -80,10 +81,10 @@ def RoutingNode(_obj_json_msg):
         try:
             ReqToFS = {"Gateway": "%s" % _g_cst_gatewayName, "Control": "REQTOPICLIST"}
             Send_json = json.dumps(ReqToFS)
-            Publisher_action.publisher.MQTT_PublishMessage(Send_json, str(_g_cst_MQTTFSTopicName))
+            publisher.MQTT_PublishMessage(Send_json, str(_g_cst_MQTTFSTopicName))
             Subscriber_action.SubscriberThreading(str(_g_cst_MQTTFSTopicName)).start()
         except:
-            print "[ERROR] Send Request for topic list error!"
+            print(bcolors.FAIL + "[ERROR] Send Request for topic list error!" + bcolors.ENDC)
             return
 
     if separation_obj_json_msg["Control"] == "REPTOPICLIST":  # GW向FS要求配對相關功能的輸出口（或對應輸入口）時，FS相回傳對應的Topic和目標、功能及變數
@@ -94,11 +95,12 @@ def RoutingNode(_obj_json_msg):
                 NodeTopic_list.append(subList_temp)  # Add to list of GW/N2/SW Topic list
                 for i in NodeTopic_list:
                     for j in i:
-                        print ("The Topic %s rule will be store." % str(j["TopicName"]))
+                        print(bcolors.WARNING + "[INFO] The Topic %s rule will be store." % str(
+                            j["TopicName"]) + bcolors.ENDC)
                         Subscriber_action.SubscriberThreading(
                             str(j["TopicName"])).start()  # 收到TopicName立即訂閱對應GW/Node上的Topic
         except:
-            print "[ERROR] Reptopiclist fail. "
+            print(bcolors.FAIL + "[ERROR] Reptopiclist fail. " + bcolors.ENDC)
     if separation_obj_json_msg["Control"] == "SET":  # 接收到指定GW送來的Control信息，並將這些信息送至Node上進行控制
         for i in NodeTopic_list:
             for j in i:
@@ -136,23 +138,23 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
             receFromNode_json = None
             try:
                 receFromNode_json = client.recv(1024)
-                receFromNode_str = json.loads(receFromNode_json)  # 將接收到的字串轉換並儲存
+                receFromNode_str = json.loads(str(receFromNode_json, encoding='UTF-8'))  # 將接收到的字串轉換並儲存
 
-            except socket.error, (value, message):
-                print(
-                    "[ERROR] Socket error, disconnected this node. Error Message:%s" % message)  # 可能會連結不到，代表client方並沒有傳送資料
+            except socket.error as message:
+                print(bcolors.FAIL +
+                      "[ERROR] Socket error, disconnected this node. Error Message:%s" % message + bcolors.ENDC)  # 可能會連結不到，代表client方並沒有傳送資料
                 client.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both
                 client.close()
                 for nodeinfo in _g_nodeList:
                     if nodeinfo[1] == receFromNode_str[
                         "Node"]:  # 如果沒收到任何信息，則代表斷線。Socket會傳送故定的信息告知還在線上，若client完全沒收到則代表斷線
-                        print ("[INFO] Remove Node: %s" % nodeinfo[1])
+                        print(bcolors.WARNING + "[INFO] Remove Node: %s" % nodeinfo[1] + bcolors.ENDC)
                         _g_nodeList.remove(nodeinfo)  # 從List中移除斷線的Node
                 return
 
             # _receFromNode = receFromNode_json.decode('utf-8')
-            print("[MESSAGE] Reciving message from [Node] at %s : \n >>> %s <<<" % (
-                time.asctime(time.localtime(time.time())), receFromNode_json))
+            print(bcolors.OKBLUE + "[MESSAGE] Reciving message from [Node] at %s : \n >>> %s <<<" % (
+                time.asctime(time.localtime(time.time())), receFromNode_json) + bcolors.ENDC)
             if receFromNode_str["Control"] == "REG":
                 try:
                     # 新的Node開始註冊
@@ -166,25 +168,22 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                     # 壓縮成Json 封包
                     _str_sendToSvJson = json.dumps(SendToOther)
                 except:
-                    print("[ERROR] Couldn't converte json to Objet!")
+                    print(bcolors.FAIL + "[ERROR] Couldn't converte json to Objet!" + bcolors.ENDC)
                 try:
                     # 註冊Node to IoT Server
                     if not ClientRegisted:
                         nodeInfo.append(receFromNode_str["Node"])
                         # 將此Node加入Node清單中
                         _g_nodeList.append(nodeInfo)
-                        print "[REGISTE] Node %s" % nodeInfo
-                        Publisher_action.publisher.MQTT_PublishMessage(_str_sendToSvJson,
-                                                                       _g_cst_MQTTAcTopicName)  # Register to IoT Server for New Node
-                        try:
-                            Subscriber_action.SubscriberThreading(_g_cst_MQTTAcTopicName).start()
-                        except:
-                            print "Create Thread fails"
+                        print(bcolors.OKGREEN + "[REGISTE] Node %s" % nodeInfo + bcolors.ENDC)
+                        publisher.MQTT_PublishMessage(_str_sendToSvJson,
+                                                      _g_cst_MQTTAcTopicName)  # Register to IoT Server for New Node
+
                         ClientRegisted = True
 
-                except:
+                except (RuntimeError, TypeError, NameError) as e:
                     ClientRegisted = False
-                    print("[ERROR] Register to Server fail!!")
+                    print(bcolors.FAIL + "[ERROR] Register to Server fail!! " + str(e) + bcolors.ENDC)
             if receFromNode_str["Control"] == "REP":  # 註冊完畢後，將有機會收到來自Node往外傳的信息，GW需要藉由MQTT將之傳到指定的Topic上
                 for i in _g_nodeList:
                     if i[1] == receFromNode_str["Node"]:
@@ -196,50 +195,50 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                                 Target_topic = "%s" % (
                                     _g_cst_gatewayName + "/" + str(receFromNode_str["Node"]) + "/" + str(
                                         receFromNode_str["Component"]))
-                                print "The Target Topic"
-                                print Target_topic
+                                print("The Target Topic:")
+                                print(Target_topic)
                                 SendToNodeTopic = {"Control": "SET"}
                                 SendToNodeTopic["TopicName"] = Target_topic
                                 SendToNodeTopic["Value"] = str(receFromNode_str["Value"])
                                 SendToNodeTopic_json = json.dumps(SendToNodeTopic)
-                                print SendToNodeTopic_json
+                                print(SendToNodeTopic_json)
                                 publisher.MQTT_PublishMessage(SendToNodeTopic_json, Target_topic)  # 傳送資料至指定的Topic上
                             else:
-                                print "No Publish to other Node"
+                                print("No Publish to other Node")
 
         if receFromNode_json is None:  # 如果完全都沒有收到信息，此處為重新連結
             client.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both
             client.close()
-            print("[ERROR] Socket timeout, disconnected this node.")
+            print(bcolors.FAIL + "[ERROR] Socket timeout, disconnected this node." + bcolors.ENDC)
             for nodeinfo in _g_nodeList:
                 if nodeinfo[1] == receFromNode_str["Node"]:
-                    print ("[INFO] Remove Node: %s" % nodeinfo[1])
+                    print(bcolors.WARNING + "[INFO] Remove Node: %s" % nodeinfo[1] + bcolors.ENDC)
                     remove_msg = ""
                     remove_msg["Gateway"] = _g_cst_gatewayName
                     remove_msg["Control"] = "DELNODE"
                     remove_msg["Nodes"][0] = receFromNode_str["Node"]
-                    Publisher_action.PublisherManager.MQTT_PublishMessage(remove_msg,
-                                                                          _g_cst_MQTTAcTopicName)  # Send a information about Removing nodes
+                    publisher.MQTT_PublishMessage(remove_msg,
+                                                  _g_cst_MQTTAcTopicName)  # Send a information about Removing nodes
                     _g_nodeList.remove(nodeinfo)
             return
 
     try:
         GWServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Socket開啟
-    except socket.error, msg:
-        print("[ERROR] Failed create Node listen socket! %s\n" % msg[1])
+    except socket.error as msg:
+        print(bcolors.FAIL + "[ERROR] Failed create Node listen socket! %s\n" % msg[1])
         sys.exit(1)
 
     GWServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Scoket開啟，並開始作接收、傳送的測試動作
     GWServerSocket.bind((_g_cst_NodeToGWSocketIP, _g_cst_NodeToGWSocketPort))
     GWServerSocket.listen(_g_cst_MaxNodeConnectionCount)
 
-    print('===============================================')
-    print('----------------Node->>>Gateway----------------\n')
-    print('>>>Start listen Node %s<<<' % (time.asctime(time.localtime(time.time()))))
-    print('===============================================\n')
+    print(bcolors.HEADER + '===============================================' + bcolors.ENDC)
+    print(bcolors.HEADER + '----------------Node->>>Gateway----------------\n' + bcolors.ENDC)
+    print(bcolors.HEADER + '>>>Start listen Node %s<<<' % (time.asctime(time.localtime(time.time()))) + bcolors.ENDC)
+    print(bcolors.HEADER + '===============================================\n' + bcolors.ENDC)
     while True:
         (clientSocket, address) = GWServerSocket.accept()
-        print("[INFO] Client Info: ", clientSocket, address)
+        print(bcolors.WARNING + "[INFO] Client Info: ", clientSocket, address, bcolors.ENDC)
         t = Thread(target=clientServiceThread, args=(clientSocket,))
         t.start()
 

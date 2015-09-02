@@ -3,11 +3,11 @@
 
 __author__ = 'Nathaniel'
 
-from class_Obj import *
-from class_MQTTManager import *
+import class_Obj
+import class_MQTTManager
 import json
 import copy
-
+from terminalColor import bcolors
 
 # RuleID, InputGW, InputNode, InputIO, OutputGW, OutputNode, OutputIO, OutputValue
 # _g_M2MRulesMappingList = [["1", "GW1", "N1", "SW1", "GW2", "N2", "LED3", "DEF"],
@@ -26,7 +26,7 @@ _g_M2MRulesMappingList = [{"RuleID": "1", "InputGW": "GW1", "InputNode": "N1", "
 
 class FunctionServerMappingRules():
     def __init__(self):
-        self.jsonObj = JSON_REPTOPICLIST()
+        self.jsonObj = class_Obj.JSON_REPTOPICLIST()
 
     def replyM2MTopicToGW(self, topicName, GWName):
         self.jsonObj.Gateway = GWName
@@ -42,7 +42,7 @@ class FunctionServerMappingRules():
             IsGWHaveM2MMappingRules = True
             for SingleM2MMappingRule in readyToReplyTopics:
                 #### ASSIGN TO M2M FS ####
-                self.SubscribeTopics = SubscribeTopicsObj()
+                self.SubscribeTopics = class_Obj.SubscribeTopicsObj()
                 self.SubscribeTopics.TopicName = str(SingleM2MMappingRule["InputGW"]) + "/" + str(
                     SingleM2MMappingRule["InputNode"]) + "/" + SingleM2MMappingRule["InputIO"]  # FS1
                 self.SubscribeTopics.Node = SingleM2MMappingRule["OutputNode"]  # M2M
@@ -56,16 +56,16 @@ class FunctionServerMappingRules():
 
         jsonstring = self.jsonObj.to_JSON()
 
-        print("[Rules] REPTOPICLIST Send to topic:%s" % (topicName))
+        print(bcolors.OKBLUE + "[Rules] REPTOPICLIST Send to topic:%s" % (topicName) + bcolors.ENDC)
 
-        pm = PublisherManager()
+        pm = class_MQTTManager.PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
     def replyM2MRulesAll(self, topicName):
-        self.jsonObj = JSON_M2MRULE()
+        self.jsonObj = class_Obj.JSON_M2MRULE()
 
         for SingleM2MMappingRule in _g_M2MRulesMappingList:
-            self.Rule = RuleObj()
+            self.Rule = class_Obj.RuleObj()
             self.Rule.RuleID = SingleM2MMappingRule["RuleID"]
             self.Rule.InputGW = SingleM2MMappingRule["InputGW"]
             self.Rule.InputNode = SingleM2MMappingRule["InputNode"]
@@ -78,13 +78,13 @@ class FunctionServerMappingRules():
 
         jsonstring = self.jsonObj.to_JSON()
 
-        print("[Rules] REPRULE Send to topic:%s" % (topicName))
+        print(bcolors.OKBLUE + "[Rules] REPRULE Send to topic:%s" % (topicName) + bcolors.ENDC)
 
-        pm = PublisherManager()
+        pm = class_MQTTManager.PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
     def AddM2MRule(self, RuleObjs):
-        print("[Rules] ADDRULE start %s" % (RuleObjs))
+        print(bcolors.OKBLUE + "[Rules] ADDRULE start %s" % (RuleObjs) + bcolors.ENDC)
 
         NotifyGWs = []
 
@@ -93,10 +93,10 @@ class FunctionServerMappingRules():
             _g_M2MRulesMappingList.append(SingleM2MMappingRule)
 
         self.ModifyRePublishToGW(NotifyGWs)
-        print("[Rules] ADDRULE end!")
+        print(bcolors.OKGREEN + "[Rules] ADDRULE end!" + bcolors.ENDC)
 
     def UpdateM2MRule(self, RuleObjs):
-        print("[Rules] UPDATERULE start %s" % (RuleObjs))
+        print(bcolors.OKBLUE + "[Rules] UPDATERULE start %s" % (RuleObjs) + bcolors.ENDC)
 
         NotifyGWs = []
 
@@ -110,10 +110,10 @@ class FunctionServerMappingRules():
                     NotifyGWs.append(SingleM2MMappingRule["OutputGW"])
 
         self.ModifyRePublishToGW(NotifyGWs)
-        print("[Rules] UPDATERULE end!")
+        print(bcolors.OKBLUE + "[Rules] UPDATERULE end!" + bcolors.ENDC)
 
     def DelM2MRule(self, RuleObjs):
-        print("[Rules] DELRULE start %s" % (RuleObjs))
+        print(bcolors.OKBLUE + "[Rules] DELRULE start %s" % (RuleObjs) + bcolors.ENDC)
 
         NotifyGWs = []
 
@@ -124,10 +124,10 @@ class FunctionServerMappingRules():
                     _g_M2MRulesMappingList.remove(delRule)
 
         self.ModifyRePublishToGW(NotifyGWs)
-        print("[Rules] DELRULE end!")
+        print(bcolors.OKGREEN + "[Rules] DELRULE end!" + bcolors.ENDC)
 
     def ModifyRePublishToGW(self, NotifyGWs):
-        print("[Rules] Republish New M2M Rules for relate GW.")
+        print(bcolors.OKBLUE + "[Rules] Republish New M2M Rules for relate GW." + bcolors.ENDC)
         NotifyGWs = list(set(NotifyGWs))
         for gws in NotifyGWs:
             self.replyM2MRulesAll(gws)

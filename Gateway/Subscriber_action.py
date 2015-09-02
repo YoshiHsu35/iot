@@ -9,7 +9,7 @@ import paho.mqtt.client as mqtt
 import sys
 import json
 import time
-
+from terminalColor import bcolors
 # 上層目錄
 sys.path.append("..")
 import config_ServerIPList
@@ -36,7 +36,8 @@ class SubscriberManager():
         ########## MQTT Subscriber ##############
         # The callback for when the client receives a CONNACK response from the server.
         def on_connect(client, userdata, flags, rc):
-            print("[INFO] Connected MQTT Topic Server:" + self.topicName + " with result code " + str(rc))
+            print(bcolors.WARNING + "[INFO] Connected MQTT Topic Server:" + self.topicName + " with result code " + str(
+                rc) + bcolors.ENDC)
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
             # print(type(self.topicName))
@@ -44,22 +45,22 @@ class SubscriberManager():
 
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, userdata, msg):
-            print("[INFO] MQTT message receive from Topic %s at %s :%s" % (
-                msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)))
+            print(bcolors.WARNING + "[INFO] MQTT message receive from Topic %s at %s :%s" % (
+                msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)) + bcolors.ENDC)
             try:
-                _obj_json_msg = json.loads(msg.payload)
-                from Gateway.Gateway import RoutingNode
+                _obj_json_msg = json.loads(str(msg.payload, encoding="UTF-8"))
+                from Gateway import RoutingNode
                 RoutingNode(_obj_json_msg)
-            except:
-                print("[ERROR] Couldn't converte json to Objet!")
+            except (NameError, TypeError, RuntimeError) as e:
+                print(bcolors.FAIL + "[ERROR] Couldn't converte json to Objet! " + str(e) + bcolors.ENDC)
 
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.connect(_g_cst_ToMQTTTopicServerIP, _g_cst_ToMQTTTopicServerPort, 60)
+        client.connect(_g_cst_ToMQTTTopicServerIP, int(_g_cst_ToMQTTTopicServerPort), 60)
         # Blocking call that processes network traffic, dispatches callbacks and
         # handles reconnecting.
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
-        print("[INFO] Subscribe TopicName:" + topicName)
+        print(bcolors.WARNING + "[INFO] Subscribe TopicName:" + topicName + bcolors.ENDC)
         client.loop_forever()

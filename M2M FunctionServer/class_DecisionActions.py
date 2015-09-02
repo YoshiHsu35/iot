@@ -7,10 +7,11 @@ import time
 import json
 import copy
 import sys
-from class_MQTTManager import *
-from class_Obj import *
-from M2MFunctionServer import *
+import class_MQTTManager
+import class_Obj
+import M2MFunctionServer
 from M2MRule import *
+from terminalColor import bcolors
 
 
 class DecisionAction():
@@ -20,7 +21,8 @@ class DecisionAction():
         ########## Control REQTOPICLIST ##########
 
         if (spreate_obj_json_msg["Control"] == "REQTOPICLIST"):
-            print("[DecisionActions] REQTOPICLIST TopicName: %s" % spreate_obj_json_msg["Gateway"])
+            print(bcolors.OKBLUE + "[DecisionActions] REQTOPICLIST TopicName: %s" % spreate_obj_json_msg[
+                "Gateway"] + bcolors.ENDC)
 
             m2mfsmrules = FunctionServerMappingRules()
 
@@ -44,4 +46,5 @@ class DecisionAction():
             m2mfsmrules.DelM2MRule(spreate_obj_json_msg["Rules"])
 
         else:
-            print("[DecisionActions] Receive message in wrong Control Signal! json:%s" % (spreate_obj_json_msg))
+            print(bcolors.FAIL + "[DecisionActions] Receive message in wrong Control Signal! json:%s" % (
+            spreate_obj_json_msg) + bcolors.ENDC)
