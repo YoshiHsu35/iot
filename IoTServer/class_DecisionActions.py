@@ -56,12 +56,12 @@ class DecisionAction():
                     # print("in Current GWOBJ: "+ str(gwobj) + " name:"+ str(gwobj.Name))
 
                     for node in spreate_obj_json_msg["Nodes"]:
-                        nodeobj = class_Obj.NodeObj(node["Node"], node["NodeFunction"], node["Functions"])
+                        nodeobj = class_Obj.NodeObj(node["NodeUUID"], node["NodeFunction"], node["Functions"])
                         # print("in nodeobj "+str(nodeobj))
                         gwobj.Nodes.append(nodeobj)
                         print(
                             bcolors.OKGREEN + "[DecisionActions] ADDNODE From %s, NodeName is %s, NodeFunction is %s, Functions is %s" %
-                            (gwobj.Name, node["Node"], node["NodeFunction"], node["Functions"]) + bcolors.ENDC)
+                            (gwobj.Name, node["NodeUUID"], node["NodeFunction"], node["Functions"]) + bcolors.ENDC)
 
                         # for g in gwobj.Nodes:
                         #    print(g.Functions)

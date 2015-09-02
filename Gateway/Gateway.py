@@ -9,6 +9,7 @@ import copy
 import sys
 import Subscriber_action
 import Publisher_action
+from class_Obj import NodeInfo
 from terminalColor import bcolors
 
 _g_cst_gatewayName = "GW1"
@@ -26,6 +27,7 @@ _g_cst_ToGWProtocalHaveMQTT = True
 ReplyTopicList = False
 # _g_cst_ToGWProtocalHaveSocket = True #Default enable, can't disable for now
 _g_nodeList = []
+_g_NodeNameIndex = 0
 
 print(bcolors.HEADER + ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)
 print(bcolors.HEADER + ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)
@@ -128,10 +130,12 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
     global publisher
     Nodelist_check = False
 
-    def clientServiceThread(client):
+    def clientServiceThread(client, _g_NodeNameIndex=0):
         # 若node連線建立成功，把這個連線存到node list，讓其他的部分可以調用以傳送訊息
-        nodeInfo = []
-        nodeInfo.append(client)  # 將Node信息加入List中
+        nodeInfo = NodeInfo(client, "N" + str(_g_NodeNameIndex))
+        _g_NodeNameIndex += 1
+        # nodeInfo = []
+        # nodeInfo.append(client)  # 將Node信息加入List中
         ClientRegisted = False
         while (True):
             time.sleep(nodePollingInterval)  # 定時delay
@@ -139,15 +143,15 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
             try:
                 receFromNode_json = client.recv(1024)
                 receFromNode_str = json.loads(str(receFromNode_json, encoding='UTF-8'))  # 將接收到的字串轉換並儲存
-
+                NodeInfo.NodeUUID = receFromNode_str["NodeUUID"]
             except socket.error as message:
                 print(bcolors.FAIL +
                       "[ERROR] Socket error, disconnected this node. Error Message:%s" % message + bcolors.ENDC)  # 可能會連結不到，代表client方並沒有傳送資料
                 client.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both
                 client.close()
                 for nodeinfo in _g_nodeList:
-                    if nodeinfo[1] == receFromNode_str[
-                        "Node"]:  # 如果沒收到任何信息，則代表斷線。Socket會傳送故定的信息告知還在線上，若client完全沒收到則代表斷線
+                    if nodeinfo.NodeUUID == receFromNode_str[
+                        "NodeUUID"]:  # 如果沒收到任何信息，則代表斷線。Socket會傳送故定的信息告知還在線上，若client完全沒收到則代表斷線
                         print(bcolors.WARNING + "[INFO] Remove Node: %s" % nodeinfo[1] + bcolors.ENDC)
                         _g_nodeList.remove(nodeinfo)  # 從List中移除斷線的Node
                 return
@@ -161,7 +165,8 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                     SendToOther = {"Gateway": "%s" % _g_cst_gatewayName}
                     SendToOther["Control"] = "ADDNODE"
                     SendToOther["Nodes"] = [{
-                        "Node": "%s" % receFromNode_str["Node"],
+                        "NodeUUID": "%s" % receFromNode_str["NodeUUID"],
+                        #"Node": "%s" % nodeInfo.NodeName,
                         "NodeFunction": "%s" % receFromNode_str["NodeFunction"],
                         "Functions": receFromNode_str["Functions"]
                     }]
@@ -172,10 +177,9 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                 try:
                     # 註冊Node to IoT Server
                     if not ClientRegisted:
-                        nodeInfo.append(receFromNode_str["Node"])
                         # 將此Node加入Node清單中
                         _g_nodeList.append(nodeInfo)
-                        print(bcolors.OKGREEN + "[REGISTE] Node %s" % nodeInfo + bcolors.ENDC)
+                        print(bcolors.OKGREEN + "[REGISTE] Node %s" % nodeInfo.NodeUUID + bcolors.ENDC)
                         publisher.MQTT_PublishMessage(_str_sendToSvJson,
                                                       _g_cst_MQTTAcTopicName)  # Register to IoT Server for New Node
 
@@ -185,38 +189,35 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                     ClientRegisted = False
                     print(bcolors.FAIL + "[ERROR] Register to Server fail!! " + str(e) + bcolors.ENDC)
             if receFromNode_str["Control"] == "REP":  # 註冊完畢後，將有機會收到來自Node往外傳的信息，GW需要藉由MQTT將之傳到指定的Topic上
-                for i in _g_nodeList:
-                    if i[1] == receFromNode_str["Node"]:
-                        Nodelist_check = True
-                if Nodelist_check == True:
-                    for i in NodeTopic_list:
-                        for j in i:
-                            if j["Node"] == receFromNode_str["Node"]:
-                                Target_topic = "%s" % (
-                                    _g_cst_gatewayName + "/" + str(receFromNode_str["Node"]) + "/" + str(
-                                        receFromNode_str["Component"]))
-                                print("The Target Topic:")
-                                print(Target_topic)
-                                SendToNodeTopic = {"Control": "SET"}
-                                SendToNodeTopic["TopicName"] = Target_topic
-                                SendToNodeTopic["Value"] = str(receFromNode_str["Value"])
-                                SendToNodeTopic_json = json.dumps(SendToNodeTopic)
-                                print(SendToNodeTopic_json)
-                                publisher.MQTT_PublishMessage(SendToNodeTopic_json, Target_topic)  # 傳送資料至指定的Topic上
-                            else:
-                                print("No Publish to other Node")
+                foundTargetNode = False
+                for nodeinfo in _g_nodeList:
+                    if nodeinfo.NodeUUID == receFromNode_str["NodeUUID"]:
+                        Target_topic = "%s" % (
+                            _g_cst_gatewayName + "/" + str(receFromNode_str["NodeUUID"]) + "/" + str(
+                                receFromNode_str["Component"]))
+                        print("The Target Topic:")
+                        print(Target_topic)
+                        SendToNodeTopic = {"Control": "SET"}
+                        SendToNodeTopic["TopicName"] = Target_topic
+                        SendToNodeTopic["Value"] = str(receFromNode_str["Value"])
+                        SendToNodeTopic_json = json.dumps(SendToNodeTopic)
+                        print(SendToNodeTopic_json)
+                        publisher.MQTT_PublishMessage(SendToNodeTopic_json, Target_topic)  # 傳送資料至指定的Topic上
+                        foundTargetNode = True
+                if (~foundTargetNode):
+                    print("No Publish to other Node")
 
         if receFromNode_json is None:  # 如果完全都沒有收到信息，此處為重新連結
             client.shutdown(2)  # 0 = done receiving, 1 = done sending, 2 = both
             client.close()
             print(bcolors.FAIL + "[ERROR] Socket timeout, disconnected this node." + bcolors.ENDC)
             for nodeinfo in _g_nodeList:
-                if nodeinfo[1] == receFromNode_str["Node"]:
-                    print(bcolors.WARNING + "[INFO] Remove Node: %s" % nodeinfo[1] + bcolors.ENDC)
+                if nodeinfo.NodeUUID == receFromNode_str["NodeUUID"]:
+                    print(bcolors.WARNING + "[INFO] Remove Node: %s" % nodeinfo.NodeName + bcolors.ENDC)
                     remove_msg = ""
                     remove_msg["Gateway"] = _g_cst_gatewayName
                     remove_msg["Control"] = "DELNODE"
-                    remove_msg["Nodes"][0] = receFromNode_str["Node"]
+                    remove_msg["NodeUUIDs"][0] = receFromNode_str["NodeUUID"]
                     publisher.MQTT_PublishMessage(remove_msg,
                                                   _g_cst_MQTTAcTopicName)  # Send a information about Removing nodes
                     _g_nodeList.remove(nodeinfo)
@@ -239,7 +240,7 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
     while True:
         (clientSocket, address) = GWServerSocket.accept()
         print(bcolors.WARNING + "[INFO] Client Info: ", clientSocket, address, bcolors.ENDC)
-        t = Thread(target=clientServiceThread, args=(clientSocket,))
+        t = Thread(target=clientServiceThread, args=(clientSocket, _g_NodeNameIndex))
         t.start()
 
 

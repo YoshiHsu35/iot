@@ -33,7 +33,7 @@ class FunctionServerMappingRules():
             for nodeObj in GWObj:
 
                 if (nodeObj.NodeFunction == fsMappingRule["NodeFunction"]):  # IOs
-                    self.FSIP.Nodes.append(nodeObj.Name)
+                    self.FSIP.Nodes.append(nodeObj.NodeUUID)
                     IsFSHaveNodeMapping = True
 
             # 如果規則中的function在GW下面的Node找不到，則不需要回傳該function所要的topic

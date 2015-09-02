@@ -7,8 +7,8 @@ import json
 ###############################################################
 
 class NodeObj():
-    def __init__(self, NodeName, NodeFunction, Functions):
-        self.Name = NodeName
+    def __init__(self, NodeUUID, NodeFunction, Functions):
+        self.NodeUUID = NodeUUID
         self.NodeFunction = NodeFunction
         self.Functions = Functions
 
