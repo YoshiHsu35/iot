@@ -78,7 +78,7 @@ Target = []
 
 
 ########### Normal Socket to Server(As socket client) ##############
-def RoutingNode(_obj_json_msg):
+def M2MFSRoutingNode(_obj_json_msg):
     global publisher
     separation_obj_json_msg = copy.copy(_obj_json_msg)
     if separation_obj_json_msg["Control"] == "ADDFSIP":  # Recive control from IoT Server for Function Server Topic

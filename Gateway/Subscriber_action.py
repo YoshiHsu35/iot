@@ -49,8 +49,8 @@ class SubscriberManager():
                 msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)) + bcolors.ENDC)
             try:
                 _obj_json_msg = json.loads(str(msg.payload, encoding="UTF-8"))
-                from Gateway import RoutingNode
-                RoutingNode(_obj_json_msg)
+                from Gateway import M2MFSRoutingNode
+                M2MFSRoutingNode(_obj_json_msg)
             except (NameError, TypeError, RuntimeError) as e:
                 print(bcolors.FAIL + "[ERROR] Couldn't converte json to Objet! " + str(e) + bcolors.ENDC)
 
