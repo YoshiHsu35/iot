@@ -9,7 +9,7 @@ import json
 import copy
 import sys
 from terminalColor import  bcolors
-import class_MQTTManager
+import class_IoTSV_MQTTManager
 
 # 上層目錄
 sys.path.append("..")
@@ -17,8 +17,10 @@ import config_ServerIPList
 
 _g_cst_ToMQTTTopicServerIP = config_ServerIPList._g_cst_ToMQTTTopicServerIP
 _g_cst_ToMQTTTopicServerPort = config_ServerIPList._g_cst_ToMQTTTopicServerPort
+_g_cst_IoTServerUUID = "IOTSV"
 
 _globalGWList = []
+_globalFSList = []
 _globalMANAGEDEVICEList = []
 
 print(bcolors.HEADER + "::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)
@@ -35,7 +37,7 @@ print(bcolors.HEADER + "::::::::::::::::::::::::::::::::::::::::::::::::\n" + bc
 
 
 def main():
-    class_MQTTManager.SubscriberThreading("IOTSV/REG").start()
+    class_IoTSV_MQTTManager.SubscriberThreading("IOTSV/REG").start()
 
     # sm = class_MQTTManager.SubscriberManager()
     # sm.subscribe("GW1")

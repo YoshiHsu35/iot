@@ -10,9 +10,9 @@ import config_ServerIPList
 
 
 class PublisherManager():
-    def MQTT_PublishMessage(self, message, topicName):  # 傳送到指定的Topic上
+    def MQTT_PublishMessage(self, topicName, message):  # 傳送到指定的Topic上
         print(bcolors.WARNING + "[INFO] MQTT Publishing message to topic: %s, Message:%s" % (
-        topicName, message) + bcolors.ENDC)
+            topicName, message) + bcolors.ENDC)
         mqttc = mqtt.Client("python_pub")
         mqttc.connect(config_ServerIPList._g_cst_ToMQTTTopicServerIP, int(
             config_ServerIPList._g_cst_ToMQTTTopicServerPort))

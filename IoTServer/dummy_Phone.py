@@ -1,10 +1,10 @@
 __author__ = 'Nathaniel'
-import class_MQTTManager
+import class_IoTSV_MQTTManager
 import time
 
 
 def dummy_reg():
-    publisherManager = class_MQTTManager.PublisherManager()
+    publisherManager = class_IoTSV_MQTTManager.PublisherManager()
     for x in range(1, 2):
         publisherManager.MQTT_PublishMessage("IOTSV/REG", '{ "Device": "P%s", "Control": "MANAGEDEVICEREG"}' % (x))
         time.sleep(1)

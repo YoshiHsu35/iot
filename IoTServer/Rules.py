@@ -3,8 +3,8 @@
 
 __author__ = 'Nathaniel'
 
-import class_Obj
-import class_MQTTManager
+import class_IoTSV_Obj
+import class_IoTSV_MQTTManager
 import json
 from terminalColor import bcolors
 
@@ -15,7 +15,7 @@ _g_FunctionServerMappingList = [{"FunctionTopic": "FS1", "Function": "M2M", "Nod
 
 class FunctionServerMappingRules():
     def __init__(self):
-        self.jsonObj = class_Obj.JSON_ADDFSIP()
+        self.jsonObj = class_IoTSV_Obj.JSON_ADDFSIP()
 
     def replyFSTopicToGW(self, topicName, GWObj):
         self.jsonObj.Control = "ADDFSIP"
@@ -24,7 +24,7 @@ class FunctionServerMappingRules():
             IsFSHaveNodeMapping = False
 
             #### ASSIGN TO M2M FS ####
-            self.FSIP = class_Obj.FSIPObj()
+            self.FSIP = class_IoTSV_Obj.FSIPObj()
             self.FSIP.FunctionTopic = fsMappingRule["FunctionTopic"]  # FS1
             self.FSIP.Function = fsMappingRule["Function"]  # M2M
             self.FSIP.IP = "0.0.0.0"
@@ -44,7 +44,7 @@ class FunctionServerMappingRules():
 
         print(bcolors.OKBLUE + "[Rules] ADDFSIP Send to topic:%s" % (topicName) + bcolors.ENDC)
 
-        pm = class_MQTTManager.PublisherManager()
+        pm = class_IoTSV_MQTTManager.PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
     def replyFSTopicToMANAGEDEV(self, topicName):
@@ -53,7 +53,7 @@ class FunctionServerMappingRules():
             IsFSHaveNodeMapping = False
 
             #### ASSIGN TO M2M FS ####
-            self.FSIP = class_Obj.FSIPObj()
+            self.FSIP = class_IoTSV_Obj.FSIPObj()
             self.FSIP.FunctionTopic = fsMappingRule["FunctionTopic"]
             self.FSIP.Function = fsMappingRule["Function"]
             self.FSIP.IP = "0.0.0.0"
@@ -64,5 +64,5 @@ class FunctionServerMappingRules():
 
         print(bcolors.OKBLUE + "[Rules] ADDFSIP Send to topic:%s" % (topicName) + bcolors.ENDC)
 
-        pm = class_MQTTManager.PublisherManager()
+        pm = class_IoTSV_MQTTManager.PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)

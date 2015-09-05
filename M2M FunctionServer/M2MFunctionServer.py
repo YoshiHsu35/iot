@@ -8,15 +8,16 @@ import json
 import copy
 import sys
 from terminalColor import bcolors
-import class_MQTTManager
+import class_M2MFS_MQTTManager
 
 
 # 上層目錄
 sys.path.append("..")
 import config_ServerIPList
 
-_g_cst_ToMQTTTopicServerIP = config_ServerIPList._g_cst_ToMQTTTopicServerIP
-_g_cst_ToMQTTTopicServerPort = config_ServerIPList._g_cst_ToMQTTTopicServerPort
+_g_cst_MQTTRegTopicName = "IOTSV/REG"  # 一開始要和IoT_Server註冊，故需要傳送信息至指定的MQTT Channel
+_g_cst_FSUUID = "FS1"
+
 
 # _globalGWList = []
 
@@ -34,7 +35,13 @@ print(bcolors.HEADER + "::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 def main():
-    class_MQTTManager.SubscriberThreading("FS1").start()
+    REGMSG = '{"FunctionServer":"%s", "Control":"FSREG","Function":"M2M", "Source":"%s"}' % (
+    _g_cst_FSUUID, _g_cst_FSUUID)
+    publisherManger = class_M2MFS_MQTTManager.PublisherManager()
+    publisherManger.MQTT_PublishMessage(_g_cst_MQTTRegTopicName, REGMSG)
+
+    # 訂閱自身名稱topic
+    class_M2MFS_MQTTManager.SubscriberThreading(_g_cst_FSUUID).start()
 
 
 if __name__ == '__main__':

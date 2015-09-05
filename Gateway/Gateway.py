@@ -9,13 +9,13 @@ import copy
 import sys
 import Subscriber_action
 import Publisher_action
-from class_Obj import NodeInfo
+from class_GW_Obj import NodeInfo
 from terminalColor import bcolors
 import uuid
 
-_g_cst_gatewayUUID ="GW1"
-#_g_cst_gatewayUUID ="GW-" +uuid.uuid1()
-#_g_cst_gatewayName = "GW1"
+_g_cst_gatewayUUID = "GW1"
+# _g_cst_gatewayUUID ="GW-" +uuid.uuid1()
+# _g_cst_gatewayName = "GW1"
 # _g_cst_gatewayName = "GW2"
 
 _g_cst_NodeToGWSocketIP = ''  # 不用特別指定的話就是接受所有INTERFACE的IP進入
@@ -58,8 +58,8 @@ def GatewayToServerMQTTThread():
     print(bcolors.HEADER + 'Register to IoT Server successful! \n' + bcolors.ENDC)
 
     try:
-        REGMSG = '{"Gateway": "%s","Control": "GWREG"}' % _g_cst_gatewayUUID
-        publisher.MQTT_PublishMessage(REGMSG, _g_cst_MQTTRegTopicName)
+        REGMSG = '{"Gateway": "%s","Control": "GWREG", "Source":"%s"}' % (_g_cst_gatewayUUID, _g_cst_gatewayUUID)
+        publisher.MQTT_PublishMessage(_g_cst_MQTTRegTopicName, REGMSG)
 
         Subscriber_action.SubscriberThreading(str(_g_cst_MQTTRegTopicName)).start()
         # 訂閱自身名稱的topic
@@ -68,6 +68,7 @@ def GatewayToServerMQTTThread():
         _b_MQTTConnected = True
     except (RuntimeError, TypeError, NameError) as e:
         print(bcolors.FAIL + "[INFO]Register error." + str(e) + bcolors.ENDC)
+        raise
         sys.exit(1)
 
 
@@ -84,9 +85,10 @@ def RoutingNode(_obj_json_msg):
         _g_cst_MQTTFSTopicName = "%s" % separation_obj_json_msg["FSIPs"][0]["FunctionTopic"]
         FS_function = separation_obj_json_msg["FSIPs"][0]["Function"]
         try:
-            ReqToFS = {"Gateway": "%s" % _g_cst_gatewayUUID, "Control": "REQTOPICLIST"}
+            ReqToFS = {"Gateway": "%s" % _g_cst_gatewayUUID, "Control": "REQTOPICLIST",
+                       "Source": "%s" % _g_cst_gatewayUUID}
             Send_json = json.dumps(ReqToFS)
-            publisher.MQTT_PublishMessage(Send_json, str(_g_cst_MQTTFSTopicName))
+            publisher.MQTT_PublishMessage(str(_g_cst_MQTTFSTopicName), Send_json)
             Subscriber_action.SubscriberThreading(str(_g_cst_MQTTFSTopicName)).start()
         except:
             print(bcolors.FAIL + "[ERROR] Send Request for topic list error!" + bcolors.ENDC)
@@ -165,11 +167,11 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
             if receFromNode_str["Control"] == "REG":
                 try:
                     # 新的Node開始註冊
-                    SendToOther = {"Gateway": "%s" % _g_cst_gatewayUUID}
+                    SendToOther = {"Gateway": "%s" % _g_cst_gatewayUUID, "Source": "%s" % _g_cst_gatewayUUID}
                     SendToOther["Control"] = "ADDNODE"
                     SendToOther["Nodes"] = [{
                         "Node": "%s" % receFromNode_str["Node"],
-                        #"Node": "%s" % nodeInfo.NodeName,
+                        # "Node": "%s" % nodeInfo.NodeName,
                         "NodeFunction": "%s" % receFromNode_str["NodeFunction"],
                         "Functions": receFromNode_str["Functions"]
                     }]
@@ -183,8 +185,8 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                         # 將此Node加入Node清單中
                         _g_nodeList.append(nodeInfo)
                         print(bcolors.OKGREEN + "[REGISTE] Node %s" % nodeInfo.Node + bcolors.ENDC)
-                        publisher.MQTT_PublishMessage(_str_sendToSvJson,
-                                                      _g_cst_MQTTAcTopicName)  # Register to IoT Server for New Node
+                        publisher.MQTT_PublishMessage(
+                            _g_cst_MQTTAcTopicName, _str_sendToSvJson)  # Register to IoT Server for New Node
 
                         ClientRegisted = True
 
@@ -200,12 +202,12 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
                                 receFromNode_str["Component"]))
                         print("The Target Topic:")
                         print(Target_topic)
-                        SendToNodeTopic = {"Control": "SET"}
+                        SendToNodeTopic = {"Control": "SET", "Source": "%s" % _g_cst_gatewayUUID}
                         SendToNodeTopic["TopicName"] = Target_topic
                         SendToNodeTopic["Value"] = str(receFromNode_str["Value"])
                         SendToNodeTopic_json = json.dumps(SendToNodeTopic)
                         print(SendToNodeTopic_json)
-                        publisher.MQTT_PublishMessage(SendToNodeTopic_json, Target_topic)  # 傳送資料至指定的Topic上
+                        publisher.MQTT_PublishMessage(Target_topic, SendToNodeTopic_json)  # 傳送資料至指定的Topic上
                         foundTargetNode = True
                 if (~foundTargetNode):
                     print("No Publish to other Node")
@@ -217,12 +219,12 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
             for nodeinfo in _g_nodeList:
                 if nodeinfo.Node == receFromNode_str["Node"]:
                     print(bcolors.WARNING + "[INFO] Remove Node: %s" % nodeinfo.NodeName + bcolors.ENDC)
-                    remove_msg = ""
+                    remove_msg = {"Source": "%s" % _g_cst_gatewayUUID}
                     remove_msg["Gateway"] = _g_cst_gatewayUUID
                     remove_msg["Control"] = "DELNODE"
                     remove_msg["Nodes"][0] = receFromNode_str["Node"]
-                    publisher.MQTT_PublishMessage(remove_msg,
-                                                  _g_cst_MQTTAcTopicName)  # Send a information about Removing nodes
+                    publisher.MQTT_PublishMessage(
+                        _g_cst_MQTTAcTopicName, remove_msg)  # Send a information about Removing nodes
                     _g_nodeList.remove(nodeinfo)
             return
 

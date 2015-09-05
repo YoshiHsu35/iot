@@ -3,11 +3,12 @@
 
 __author__ = 'Nathaniel'
 
-import class_Obj
-import class_MQTTManager
+import class_M2MFS_Obj
+import class_M2MFS_MQTTManager
 import json
 import copy
 from terminalColor import bcolors
+import  M2MFunctionServer
 
 # RuleID, InputGW, InputNode, InputIO, OutputGW, OutputNode, OutputIO, OutputValue
 # _g_M2MRulesMappingList = [["1", "GW1", "N1", "SW1", "GW2", "N2", "LED3", "DEF"],
@@ -26,7 +27,7 @@ _g_M2MRulesMappingList = [{"RuleID": "1", "InputGW": "GW1", "InputNode": "N1", "
 
 class FunctionServerMappingRules():
     def __init__(self):
-        self.jsonObj = class_Obj.JSON_REPTOPICLIST()
+        self.jsonObj = class_M2MFS_Obj.JSON_REPTOPICLIST()
 
     def replyM2MTopicToGW(self, topicName, GWName):
         self.jsonObj.Gateway = GWName
@@ -42,7 +43,7 @@ class FunctionServerMappingRules():
             IsGWHaveM2MMappingRules = True
             for SingleM2MMappingRule in readyToReplyTopics:
                 #### ASSIGN TO M2M FS ####
-                self.SubscribeTopics = class_Obj.SubscribeTopicsObj()
+                self.SubscribeTopics = class_M2MFS_Obj.SubscribeTopicsObj()
                 self.SubscribeTopics.TopicName = str(SingleM2MMappingRule["InputGW"]) + "/" + str(
                     SingleM2MMappingRule["InputNode"]) + "/" + SingleM2MMappingRule["InputIO"]  # FS1
                 self.SubscribeTopics.Node = SingleM2MMappingRule["OutputNode"]  # M2M
@@ -58,14 +59,14 @@ class FunctionServerMappingRules():
 
         print(bcolors.OKBLUE + "[Rules] REPTOPICLIST Send to topic:%s" % (topicName) + bcolors.ENDC)
 
-        pm = class_MQTTManager.PublisherManager()
+        pm = class_M2MFS_MQTTManager.PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
     def replyM2MRulesAll(self, topicName):
-        self.jsonObj = class_Obj.JSON_M2MRULE()
+        self.jsonObj = class_M2MFS_Obj.JSON_M2MRULE()
 
         for SingleM2MMappingRule in _g_M2MRulesMappingList:
-            self.Rule = class_Obj.RuleObj()
+            self.Rule = class_M2MFS_Obj.RuleObj()
             self.Rule.RuleID = SingleM2MMappingRule["RuleID"]
             self.Rule.InputGW = SingleM2MMappingRule["InputGW"]
             self.Rule.InputNode = SingleM2MMappingRule["InputNode"]
@@ -80,7 +81,7 @@ class FunctionServerMappingRules():
 
         print(bcolors.OKBLUE + "[Rules] REPRULE Send to topic:%s" % (topicName) + bcolors.ENDC)
 
-        pm = class_MQTTManager.PublisherManager()
+        pm = class_M2MFS_MQTTManager.PublisherManager()
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
     def AddM2MRule(self, RuleObjs):
