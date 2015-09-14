@@ -18,3 +18,4 @@ class PublisherManager():
             config_ServerIPList._g_cst_ToMQTTTopicServerPort))
         mqttc.publish(topicName, message)
         mqttc.loop(2)
+        mqttc.disconnect()

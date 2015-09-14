@@ -69,7 +69,7 @@ class DecisionAction():
 
                 print(bcolors.OKGREEN + tempprint + bcolors.ENDC)
 
-                #class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["FunctionServer"]).start()
+                # class_MQTTManager.SubscriberThreading(spreate_obj_json_msg["FunctionServer"]).start()
 
             else:
                 print(bcolors.FAIL + "[DecisionActions] REG FS Fail!, due to this FS already REG!" + bcolors.ENDC)
@@ -126,6 +126,24 @@ class DecisionAction():
             if (not IsDelNode):
                 print(bcolors.FAIL + "[DecisionActions] DELNODE Not found specific GW." + bcolors.ENDC)
 
+        ########## 收到GWLastWell異常斷線時，移除該GW在IOTSV內的相關資料 ##########
+        elif (spreate_obj_json_msg["Control"] == "LASTWILL"):
+            print(bcolors.OKBLUE + "[DecisionActions] Remove exception disconnect GW: %s" %
+                  spreate_obj_json_msg["Gateway"] + bcolors.ENDC)
+
+            IsAlreadyREMOVE = False
+
+            for p in IoTServer._globalGWList:
+                if (p.Name == spreate_obj_json_msg["Gateway"]):
+                    IoTServer._globalGWList.remove(p)
+                    class_IoTSV_MQTTManager.SubscriberManager
+                    IsAlreadyREMOVE = True
+                    print(bcolors.OKGREEN + "[DecisionActions] Remove GW Success" + bcolors.ENDC)
+
+            if (~IsAlreadyREMOVE):
+                print(bcolors.FAIL + "[DecisionActions] Remove GW NOT FOUND!" + bcolors.ENDC)
+
+
         ############### Manage Device ###############
         #############################################
         ########## Control MANAGEDEVICEREG ##########
@@ -161,6 +179,7 @@ class DecisionAction():
         elif (spreate_obj_json_msg["Control"] == "DEVICEREQFS"):
             fsmapping = Rules.FunctionServerMappingRules()
             fsmapping.replyFSTopicToMANAGEDEV(spreate_obj_json_msg["Device"])
+
 
         else:
             print(bcolors.FAIL + "[DecisionActions] Receive message in wrong Control Signal! json:%s" % (

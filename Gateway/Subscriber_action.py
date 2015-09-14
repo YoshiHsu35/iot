@@ -10,6 +10,7 @@ import sys
 import json
 import time
 from terminalColor import bcolors
+
 # 上層目錄
 sys.path.append("..")
 import config_ServerIPList
@@ -57,6 +58,11 @@ class SubscriberManager():
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+        from Gateway import _g_cst_gatewayUUID
+        WILLMSG = {"Gateway": "%s" % _g_cst_gatewayUUID, "Control": "LASTWILL",
+                   "Source": "%s" % _g_cst_gatewayUUID}
+        WILLMSG_json = json.dumps(WILLMSG)
+        client.will_set(topicName, WILLMSG_json, 2, False)
         client.connect(_g_cst_ToMQTTTopicServerIP, int(_g_cst_ToMQTTTopicServerPort), 60)
         # Blocking call that processes network traffic, dispatches callbacks and
         # handles reconnecting.
