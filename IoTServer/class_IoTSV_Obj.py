@@ -13,16 +13,12 @@ class NodeObj():
         self.NodeFunction = NodeFunction
         self.Functions = Functions
 
-
-class GatewayObj():
-    def __init__(self, GWName):
-        self.Name = GWName
-        self.Nodes = []  # 放NodeObj
-
 class FunctionServerObj():
     global Function
-    def __init__(self, FSName):
-        self.Name = FSName
+    def __init__(self, FSName, FSFunction, MappingNode):
+        self.FSName = FSName
+        self.FSFunction = FSFunction
+        self.MappingNode = MappingNode
 
 
 ###############################################################

@@ -19,7 +19,7 @@ _g_cst_ToMQTTTopicServerIP = config_ServerIPList._g_cst_ToMQTTTopicServerIP
 _g_cst_ToMQTTTopicServerPort = config_ServerIPList._g_cst_ToMQTTTopicServerPort
 _g_cst_IoTServerUUID = "IOTSV"
 
-_globalGWList = []
+_globalNodeList = []
 _globalFSList = []
 _globalMANAGEDEVICEList = []
 

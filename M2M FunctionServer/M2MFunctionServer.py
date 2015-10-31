@@ -35,7 +35,7 @@ print(bcolors.HEADER + "::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 def main():
-    REGMSG = '{"FunctionServer":"%s", "Control":"FSREG","Function":"M2M", "Source":"%s"}' % (
+    REGMSG = '{"FunctionServer":"%s", "Control":"FSREG","Function":"M2M","MappingNodes":"[IOs]", "Source":"%s"}' % (
     _g_cst_FSUUID, _g_cst_FSUUID)
     publisherManger = class_M2MFS_MQTTManager.PublisherManager()
     publisherManger.MQTT_PublishMessage(_g_cst_MQTTRegTopicName, REGMSG)
