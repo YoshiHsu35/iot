@@ -19,9 +19,9 @@ class DecisionAction():
         spreate_obj_json_msg = copy.copy(_obj_json_msg)
 
 
-        ########## Control GWREG ##########
+        ########## Control NODE_REG ##########
 
-        if (spreate_obj_json_msg["Control"] == "NODEREG"):
+        if (spreate_obj_json_msg["Control"] == "NODE_REG"):
             if (spreate_obj_json_msg["Node"].find("NODE") != -1):
                 print(bcolors.OKBLUE + "[DecisionActions] Start subscriber TopicName: %s" %
                       spreate_obj_json_msg["Node"] + bcolors.ENDC)
@@ -30,7 +30,7 @@ class DecisionAction():
                 IsAlreadyREG = False
 
                 for p in IoTServer._globalNodeList:
-                    if (p.Name == spreate_obj_json_msg["Node"]): IsAlreadyREG = True
+                    if (p.NodeName == spreate_obj_json_msg["Node"]): IsAlreadyREG = True
 
                 if (not IsAlreadyREG):
 
@@ -47,15 +47,17 @@ class DecisionAction():
                     print(bcolors.OKGREEN + tempprint + bcolors.ENDC)
 
                     class_IoTSV_MQTTManager.SubscriberThreading(spreate_obj_json_msg["Node"]).start()
-                    # fsmapping = Rules.FunctionServerMappingRules()
-                    # fsmapping.replyFSTopicToGW(spreate_obj_json_msg["Node"], nodeObj.NodeName)
+
+                    time.sleep(1)
+                    fsmapping = Rules.FunctionServerMappingRules()
+                    fsmapping.replyFSTopicToNode(spreate_obj_json_msg["Node"], nodeObj)
                 else:
                     print(
                         bcolors.FAIL + "[DecisionActions] REG Node Fail!, due to this Node already REG!" + bcolors.ENDC)
 
 
-        ########## Control FSREG ##########
-        elif (spreate_obj_json_msg["Control"] == "FSREG"):
+        ########## Control FS_REG ##########
+        elif (spreate_obj_json_msg["Control"] == "FS_REG"):
             print(bcolors.OKBLUE + "[DecisionActions] Start subscriber TopicName: %s" %
                   spreate_obj_json_msg["FunctionServer"] + bcolors.ENDC)
 
@@ -69,7 +71,10 @@ class DecisionAction():
 
                 fsobj = class_IoTSV_Obj.FunctionServerObj(
                     spreate_obj_json_msg["FunctionServer"],
-                    spreate_obj_json_msg["Function"], spreate_obj_json_msg["MappingNodes"])
+                    spreate_obj_json_msg["Function"],
+                    spreate_obj_json_msg["FSIP"],
+                    spreate_obj_json_msg["MappingNodes"]
+                )
 
                 IoTServer._globalFSList.append(fsobj)
 
@@ -86,7 +91,7 @@ class DecisionAction():
         #
         # ########## Control ADDNODE ##########
         #
-        # elif (spreate_obj_json_msg["Control"] == "ADDNODE"):
+        # elif (spreate_obj_json_msg["Control"] == "NODE_ADD"):
         #     print(bcolors.OKBLUE + "[DecisionActions] Start AddNode" + bcolors.ENDC)
         #     IsAddNode = False
         #     for nodeObj in IoTServer._globalNodeList:
@@ -115,42 +120,37 @@ class DecisionAction():
 
         ########## Control DELNODE ##########
 
-        elif (spreate_obj_json_msg["Control"] == "DELNODE"):
+        elif (spreate_obj_json_msg["Control"] == "NODE_DEL"):
             IsDelNode = False
-            jsonTempObj_Nodes = spreate_obj_json_msg["Nodes"]
             for nodeObj in IoTServer._globalNodeList:
-                if (nodeObj.Name == spreate_obj_json_msg["Gateway"]):
-                    for nodes in nodeObj.Nodes:
-
-                        try:
-                            searchIndex = jsonTempObj_Nodes.index(nodes.Name)
-                            if (searchIndex > -1):
-                                print(bcolors.OKGREEN + "[DecisionActions] DELNODE remove %s" % (
-                                    nodes.Name) + bcolors.ENDC)
-                                nodeObj.Nodes.remove(nodes)
-                                IsDelNode = True
-                        except:
-                            pass
+                if (nodeObj.NodeName == spreate_obj_json_msg["Node"]):
+                    try:
+                        print(bcolors.OKGREEN + "[DecisionActions] NODE remove %s" % (
+                            nodeObj.NodeName) + bcolors.ENDC)
+                        IoTServer._globalNodeList.remove(nodeObj)
+                        IsDelNode = True
+                    except:
+                        pass
 
             if (not IsDelNode):
-                print(bcolors.FAIL + "[DecisionActions] DELNODE Not found specific GW." + bcolors.ENDC)
+                print(bcolors.FAIL + "[DecisionActions] DEL NODE Not found." + bcolors.ENDC)
 
-        ########## 收到GWLastWell異常斷線時，移除該GW在IOTSV內的相關資料 ##########
+        ########## 收到NodeLastWell異常斷線時，移除該Node在IOTSV內的相關資料 ##########
         elif (spreate_obj_json_msg["Control"] == "LASTWILL"):
             print(bcolors.OKBLUE + "[DecisionActions] Remove exception disconnect GW: %s" %
-                  spreate_obj_json_msg["Gateway"] + bcolors.ENDC)
+                  spreate_obj_json_msg["Node"] + bcolors.ENDC)
 
             IsAlreadyREMOVE = False
 
             for p in IoTServer._globalNodeList:
-                if (p.Name == spreate_obj_json_msg["Gateway"]):
+                if (p.NodeName == spreate_obj_json_msg["Node"]):
                     IoTServer._globalNodeList.remove(p)
-                    class_IoTSV_MQTTManager.SubscriberManager
+                    #class_IoTSV_MQTTManager.SubscriberManager
                     IsAlreadyREMOVE = True
-                    print(bcolors.OKGREEN + "[DecisionActions] Remove GW Success" + bcolors.ENDC)
+                    print(bcolors.OKGREEN + "[DecisionActions] Remove Node Success" + bcolors.ENDC)
 
             if (~IsAlreadyREMOVE):
-                print(bcolors.FAIL + "[DecisionActions] Remove GW NOT FOUND!" + bcolors.ENDC)
+                print(bcolors.FAIL + "[DecisionActions] Remove Node NOT FOUND!" + bcolors.ENDC)
 
 
         ############### Manage Device ###############
@@ -158,23 +158,23 @@ class DecisionAction():
         ########## Control MANAGEDEVICEREG ##########
         #############################################
 
-        elif (spreate_obj_json_msg["Control"] == "MANAGEDEVICEREG"):
+        elif (spreate_obj_json_msg["Control"] == "MD_REG"):
             print(bcolors.OKBLUE + "[DecisionActions] Start subscriber TopicName: %s" %
                   spreate_obj_json_msg["Device"] + bcolors.ENDC)
 
             ## 防止重複註冊
             IsAlreadyREG = False
 
-            for p in IoTServer._globalMANAGEDEVICEList:
+            for p in IoTServer._globalMDList:
                 if (p.Name == spreate_obj_json_msg["Device"]): IsAlreadyREG = True
 
             if (not IsAlreadyREG):
 
                 manObj = class_IoTSV_Obj.ManageObj(spreate_obj_json_msg["Device"])
-                IoTServer._globalMANAGEDEVICEList.append(manObj)
+                IoTServer._globalMDList.append(manObj)
 
-                tempprint = "[DecisionActions] REG MANAGEDEVICE From %s ,_globalMANAGEDEVICEList:" % (manObj.Name)
-                for p in IoTServer._globalMANAGEDEVICEList: tempprint += p.Name + ", "
+                tempprint = "[DecisionActions] REG MANAGEDEVICE From %s ,_globalMDList:" % (manObj.Name)
+                for p in IoTServer._globalMDList: tempprint += p.Name + ", "
 
                 print(bcolors.OKGREEN + tempprint + bcolors.ENDC)
 
@@ -185,9 +185,9 @@ class DecisionAction():
                     bcolors.FAIL + "[DecisionActions] REG MANAGEDEVICE Fail!, due to this MANAGEDEVICE already REG!" + bcolors.FAIL)
 
         ########## Control DEVICEREQFS ##########
-        elif (spreate_obj_json_msg["Control"] == "DEVICEREQFS"):
+        elif (spreate_obj_json_msg["Control"] == "MD_REQFS"):
             fsmapping = Rules.FunctionServerMappingRules()
-            fsmapping.replyFSTopicToMANAGEDEV(spreate_obj_json_msg["Device"])
+            fsmapping.replyFSTopicToMD(spreate_obj_json_msg["Device"])
 
 
         else:

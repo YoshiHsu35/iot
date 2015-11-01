@@ -3,6 +3,7 @@
 
 __author__ = 'Nathaniel'
 
+import IoTServer
 import class_IoTSV_Obj
 import class_IoTSV_MQTTManager
 import json
@@ -14,53 +15,43 @@ _g_FunctionServerMappingList = [{"FunctionTopic": "FS1", "Function": "M2M", "Nod
 
 
 class FunctionServerMappingRules():
-    def __init__(self):
-        self.jsonObj = class_IoTSV_Obj.JSON_ADDFSIP()
+    def replyFSTopicToNode(self, topicName, NodeObj):
 
-    def replyFSTopicToGW(self, topicName, GWObj):
-        self.jsonObj.Control = "ADDFSIP"
-        for fsMappingRule in _g_FunctionServerMappingList:
+        IsNodeMapping = False
 
-            IsFSHaveNodeMapping = False
+        for FS in IoTServer._globalFSList:
+            for NodeFunctions in NodeObj.NodeFunctions:
 
-            #### ASSIGN TO M2M FS ####
-            self.FSIP = class_IoTSV_Obj.FSIPObj()
-            self.FSIP.FunctionTopic = fsMappingRule["FunctionTopic"]  # FS1
-            self.FSIP.Function = fsMappingRule["Function"]  # M2M
-            self.FSIP.IP = "0.0.0.0"
-            self.FSIP.Nodes = []
+                if (NodeFunctions in FS.MappingNodes):
+                    #### ASSIGN TO M2M FS ####
+                    self.FSIP = class_IoTSV_Obj.FSIPObj \
+                        (NodeObj.NodeName, IoTServer._g_cst_IoTServerUUID)
+                    self.FSIP.FSPairs.append([FS.FSName, FS.FSFunction, FS.IP, NodeFunctions])
 
-            for nodeObj in GWObj:
+                    IsNodeMapping = True
 
-                if (nodeObj.NodeFunction == fsMappingRule["NodeFunction"]):  # IOs
-                    self.FSIP.Nodes.append(nodeObj.NodeName)
-                    IsFSHaveNodeMapping = True
+        if (IsNodeMapping == False):
+            self.FSIP = class_IoTSV_Obj.FSIPObj \
+                (NodeObj.NodeName, IoTServer._g_cst_IoTServerUUID)
+            self.FSIP.FSPairs = [['x']]
 
-            # 如果規則中的function在GW下面的Node找不到，則不需要回傳該function所要的topic
-            if (IsFSHaveNodeMapping):
-                self.jsonObj.FSIPs.append(self.FSIP)
-
-        jsonstring = self.jsonObj.to_JSON()
+        jsonstring = self.FSIP.to_JSON()
 
         print(bcolors.OKBLUE + "[Rules] ADDFSIP Send to topic:%s" % (topicName) + bcolors.ENDC)
 
         pm = class_IoTSV_MQTTManager.PublisherManager()
+
         pm.MQTT_PublishMessage(topicName, jsonstring)
 
-    def replyFSTopicToMANAGEDEV(self, topicName):
+    def replyFSTopicToMD(self, topicName):
 
-        for fsMappingRule in _g_FunctionServerMappingList:
-            IsFSHaveNodeMapping = False
-
+        for FS in IoTServer._globalFSList:
             #### ASSIGN TO M2M FS ####
-            self.FSIP = class_IoTSV_Obj.FSIPObj()
-            self.FSIP.FunctionTopic = fsMappingRule["FunctionTopic"]
-            self.FSIP.Function = fsMappingRule["Function"]
-            self.FSIP.IP = "0.0.0.0"
-            del self.FSIP.Nodes  # 不需要這個屬性
-            self.jsonObj.FSIPs.append(self.FSIP)
+            self.FSIP = class_IoTSV_Obj.FSIPObj \
+                ("x", IoTServer._g_cst_IoTServerUUID)
+            self.FSIP.FSPairs.append([FS.FSName, FS.FSFunction, FS.IP, "x"])
 
-        jsonstring = self.jsonObj.to_JSON()
+        jsonstring = self.FSIP.to_JSON()
 
         print(bcolors.OKBLUE + "[Rules] ADDFSIP Send to topic:%s" % (topicName) + bcolors.ENDC)
 

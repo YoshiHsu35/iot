@@ -248,12 +248,12 @@ def NodeToGatewaySocketThread():  # 接收來自Node的註冊信息，並將之�
         t = Thread(target=clientServiceThread, args=(clientSocket, _g_NodeNameIndex))
         t.start()
 
+if __name__ == "__main__":
+    t_NodeGateway = Thread(target=NodeToGatewaySocketThread, args=())
+    t_NodeGateway.start()
 
-t_NodeGateway = Thread(target=NodeToGatewaySocketThread, args=())
-t_NodeGateway.start()
-
-MQTT_Thread = Thread(target=GatewayToServerMQTTThread(), args=())
-MQTT_Thread.start()
+    MQTT_Thread = Thread(target=GatewayToServerMQTTThread(), args=())
+    MQTT_Thread.start()
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.

@@ -16,7 +16,7 @@ class JSON_REPTOPICLIST():
     def __init__(self):
         self.Source = M2MFunctionServer._g_cst_FSUUID
         self.Gateway = ""
-        self.Control = "REPTOPICLIST"
+        self.Control = "M2M_REPTOPICLIST"
         self.SubscribeTopics = []  # SubscribeTopicsObj
 
 
@@ -25,7 +25,7 @@ class SubscribeTopicsObj:
         self.TopicName = ""
         self.Node = ""
         self.Target = ""
-        self.Value = ""
+        self.TargetValueOverride = ""
 
 
 ###############################################################
@@ -36,17 +36,16 @@ class JSON_M2MRULE():
                           sort_keys=True)  # , indent=4) 要indent在uncommit
 
     def __init__(self):
-        self.Control = "REPRULE"
+        self.Source = M2MFunctionServer._g_cst_FSUUID
+        self.Control = "M2M_REPRULE"
         self.Rules = []
 
 
 class RuleObj:
     def __init__(self):
         self.RuleID = ""
-        self.InputGW = ""
         self.InputNode = ""
         self.InputIO = ""
-        self.OutputGW = ""
         self.OutputNode = ""
         self.OutputIO = ""
-        self.OutputValue = ""
+        self.TargetValueOverride = ""

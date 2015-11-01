@@ -8,17 +8,20 @@ import IoTServer
 ###############################################################
 
 class NodeObj():
-    def __init__(self, NodeName, NodeFunction, Functions):
+    def __init__(self, NodeName, NodeFunctions, Functions):
         self.NodeName = NodeName
-        self.NodeFunction = NodeFunction
+        self.NodeFunctions = NodeFunctions
         self.Functions = Functions
+
 
 class FunctionServerObj():
     global Function
-    def __init__(self, FSName, FSFunction, MappingNode):
+
+    def __init__(self, FSName, FSFunction, IP, MappingNodes):
         self.FSName = FSName
         self.FSFunction = FSFunction
-        self.MappingNode = MappingNode
+        self.IP = IP
+        self.MappingNodes = MappingNodes
 
 
 ###############################################################
@@ -44,10 +47,16 @@ class JSON_ADDFSIP():
 
 
 class FSIPObj:
-    def __init__(self):
-        self.FunctionTopic = ""
-        self.Function = ""
-        self.IP = "0.0.0.0"
-        self.Nodes = []  # 放Node名稱就好(純字串)
+    def __init__(self, REPNodeName, SOURCE):
+        self.Node = REPNodeName
+        self.Control = "ADDFS"
+
+        # FS.FSName, FS.FSFunction, FS.IP, NodeFunctions
+        self.FSPairs = []
+        self.Source = SOURCE
+
+    def to_JSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True)  # , indent=4) 要indent在uncommit
 
 ###############################################################

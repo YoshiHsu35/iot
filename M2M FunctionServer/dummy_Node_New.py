@@ -10,13 +10,12 @@ _g_NodeUUID = uuid.uuid1()
 
 def initREG():
     publisherManager = class_M2MFS_MQTTManager.PublisherManager()
-    initMSGObj = {'Node': "NODE-" + str(_g_NodeUUID), 'Control': 'NODEREG', 'NodeFunctions': ['IOs'],
-                  'Functions': ["LED1", "LED2", "SW1"], 'Source': "NODE-" + str(_g_NodeUUID)}
+    initMSGObj = {'TopicName': "NODE-02/SW2", 'Control': 'M2M_SET', 'Source': "NODE-02"}
     initMSGSTR = json.dumps(initMSGObj)
     now = time.strftime("%c")
     print(now)
     print("[INFO] SendREGMSG:%s" % initMSGSTR)
-    publisherManager.MQTT_PublishMessage("IOTSV/REG", initMSGSTR)
+    publisherManager.MQTT_PublishMessage("NODE-02/SW2", initMSGSTR)
 
 
 def main():

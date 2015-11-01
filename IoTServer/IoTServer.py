@@ -21,7 +21,7 @@ _g_cst_IoTServerUUID = "IOTSV"
 
 _globalNodeList = []
 _globalFSList = []
-_globalMANAGEDEVICEList = []
+_globalMDList = []
 
 print(bcolors.HEADER + "::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)
 print(bcolors.HEADER + "::::::::::::::::::::::::::::::::::::::::::::::::" + bcolors.ENDC)

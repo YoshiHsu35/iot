@@ -20,31 +20,31 @@ class DecisionAction():
 
         ########## Control REQTOPICLIST ##########
 
-        if (spreate_obj_json_msg["Control"] == "REQTOPICLIST"):
+        if (spreate_obj_json_msg["Control"] == "M2M_REQTOPICLIST"):
             print(bcolors.OKBLUE + "[DecisionActions] REQTOPICLIST TopicName: %s" % spreate_obj_json_msg[
-                "Gateway"] + bcolors.ENDC)
+                "Source"] + bcolors.ENDC)
 
             m2mfsmrules = FunctionServerMappingRules()
+            time.sleep(1)
+            m2mfsmrules.replyM2MTopicToNode("FS1", spreate_obj_json_msg["Node"])
 
-            m2mfsmrules.replyM2MTopicToGW("FS1", spreate_obj_json_msg["Gateway"])
 
-
-        elif (spreate_obj_json_msg["Control"] == "GETRULE"):
+        elif (spreate_obj_json_msg["Control"] == "M2M_GETRULE"):
             m2mfsmrules = FunctionServerMappingRules()
             m2mfsmrules.replyM2MRulesAll("FS1")
 
-        elif (spreate_obj_json_msg["Control"] == "ADDRULE"):
+        elif (spreate_obj_json_msg["Control"] == "M2M_ADDRULE"):
             m2mfsmrules = FunctionServerMappingRules()
             m2mfsmrules.AddM2MRule(spreate_obj_json_msg["Rules"])
 
-        elif (spreate_obj_json_msg["Control"] == "UPDATERULE"):
+        elif (spreate_obj_json_msg["Control"] == "M2M_UPDATERULE"):
             m2mfsmrules = FunctionServerMappingRules()
             m2mfsmrules.UpdateM2MRule(spreate_obj_json_msg["Rules"])
 
-        elif (spreate_obj_json_msg["Control"] == "DELRULE"):
+        elif (spreate_obj_json_msg["Control"] == "M2M_DELRULE"):
             m2mfsmrules = FunctionServerMappingRules()
             m2mfsmrules.DelM2MRule(spreate_obj_json_msg["Rules"])
 
         else:
             print(bcolors.FAIL + "[DecisionActions] Receive message in wrong Control Signal! json:%s" % (
-            spreate_obj_json_msg) + bcolors.ENDC)
+                spreate_obj_json_msg) + bcolors.ENDC)
