@@ -65,7 +65,7 @@ class DecisionAction():
             FSIsAlreadyREG = False
 
             for p in IoTServer._globalFSList:
-                if (p.Name == spreate_obj_json_msg["FunctionServer"]): FSIsAlreadyREG = True
+                if (p.FSName == spreate_obj_json_msg["FunctionServer"]): FSIsAlreadyREG = True
 
             if (not FSIsAlreadyREG):
 
