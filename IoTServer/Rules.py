@@ -23,9 +23,13 @@ class FunctionServerMappingRules():
             for NodeFunctions in NodeObj.NodeFunctions:
 
                 if (NodeFunctions in FS.MappingNodes):
-                    #### ASSIGN TO M2M FS ####
-                    self.FSIP = class_IoTSV_Obj.FSIPObj \
-                        (NodeObj.NodeName, IoTServer._g_cst_IoTServerUUID)
+
+                    if(not IsNodeMapping):
+                        #### ASSIGN TO M2M FS ####
+                        self.FSIP = class_IoTSV_Obj.FSIPObj \
+                            (NodeObj.NodeName, IoTServer._g_cst_IoTServerUUID)
+
+					### else append FSPairs ###
                     self.FSIP.FSPairs.append([FS.FSName, FS.FSFunction, FS.IP, NodeFunctions])
 
                     IsNodeMapping = True

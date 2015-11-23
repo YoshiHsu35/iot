@@ -47,7 +47,7 @@ def NodeToServerMQTTThread():
 
     try:
 
-        initMSGObj = {'Node': _g_cst_NodeUUID, 'Control': 'NODE_REG', 'NodeFunctions': ['IOs'],
+        initMSGObj = {'Node': _g_cst_NodeUUID, 'Control': 'NODE_REG', 'NodeFunctions': ['IOs', 'IPCams'],
                       'Functions': ["LED1", "LED2", "SW1"], 'Source': _g_cst_NodeUUID}
         initMSGSTR = json.dumps(initMSGObj)
 
