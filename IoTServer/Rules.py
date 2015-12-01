@@ -24,12 +24,12 @@ class FunctionServerMappingRules():
 
                 if (NodeFunctions in FS.MappingNodes):
 
-                    if(not IsNodeMapping):
+                    if (not IsNodeMapping):
                         #### ASSIGN TO M2M FS ####
                         self.FSIP = class_IoTSV_Obj.FSIPObj \
                             (NodeObj.NodeName, IoTServer._g_cst_IoTServerUUID)
 
-					### else append FSPairs ###
+                    ### else append FSPairs ###
                     self.FSIP.FSPairs.append([FS.FSName, FS.FSFunction, FS.IP, NodeFunctions])
 
                     IsNodeMapping = True
@@ -49,12 +49,14 @@ class FunctionServerMappingRules():
 
     def replyFSTopicToMD(self, topicName):
 
+        self.FSIP = class_IoTSV_Obj.FSIPObj \
+            ("x", IoTServer._g_cst_IoTServerUUID)
+
         for FS in IoTServer._globalFSList:
             #### ASSIGN TO M2M FS ####
-            self.FSIP = class_IoTSV_Obj.FSIPObj \
-                ("x", IoTServer._g_cst_IoTServerUUID)
             self.FSIP.FSPairs.append([FS.FSName, FS.FSFunction, FS.IP, "x"])
 
+        self.FSIP.Control = "MD_REPFS";
         jsonstring = self.FSIP.to_JSON()
 
         print(bcolors.OKBLUE + "[Rules] ADDFSIP Send to topic:%s" % (topicName) + bcolors.ENDC)
