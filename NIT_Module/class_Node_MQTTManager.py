@@ -22,18 +22,28 @@ _g_cst_ToMQTTTopicServerPort = config_ServerIPList._g_cst_ToMQTTTopicServerPort
 class SubscriberThreading(Thread):  # 宣告一Class，並在每次呼叫到時創建一個Thread，讓註冊後的通道能夠不間斷的接收在上面的信息
     global topicName
 
-    def __init__(self, topicName):  # 本位寫法，請注意Python中Address的部分，有些指定位置會在同一個地方
+    def __init__(self, topicName, nodeUUID):  # 本位寫法，請注意Python中Address的部分，有些指定位置會在同一個地方
         Thread.__init__(self)
         self.topicName = topicName
+        self.nodeUUID = nodeUUID
+        self.callbackST
 
     def run(self):  # Use run to create Thread. Run是預設的Function
-        subscriberManager = SubscriberManager()
+        subscriberManager = SubscriberManager(self.nodeUUID)
+
+        # callback
+        subscriberManager.callb = self.callbackST
         subscriberManager.subscribe(self.topicName)
 
 
 class SubscriberManager():
+    def __init__(self, nodeUUID, ):
+        self.nodeUUID = nodeUUID
+        self.callb = None
+
     def subscribe(self, topicName):
         self.topicName = topicName
+
         ########## MQTT Subscriber ##############
         # The callback for when the client receives a CONNACK response from the server.
         def on_connect(client, userdata, flags, rc):
@@ -50,17 +60,22 @@ class SubscriberManager():
                 msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)) + bcolors.ENDC)
             try:
                 _obj_json_msg = json.loads(str(msg.payload, encoding="UTF-8"))
-                from Simulator_Node import RxRouting
-                RxRouting(_obj_json_msg)
+
+                # from Simulator_Node import RxRouting
+                # RxRouting(_obj_json_msg)
+
+                # callback
+                self.callb(_obj_json_msg)
+
+
             except (NameError, TypeError, RuntimeError) as e:
                 print(bcolors.FAIL + "[ERROR] Couldn't converte json to Objet! " + str(e) + bcolors.ENDC)
 
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        from Simulator_Node import _g_cst_NodeUUID
-        WILLMSG = {"Node": "%s" % _g_cst_NodeUUID, "Control": "LASTWILL",
-                   "Source": "%s" % _g_cst_NodeUUID}
+        WILLMSG = {"Node": "%s" % self.nodeUUID, "Control": "LASTWILL",
+                   "Source": "%s" % self.nodeUUID}
         WILLMSG_json = json.dumps(WILLMSG)
         client.will_set(topicName, WILLMSG_json, 2, False)
         client.connect(_g_cst_ToMQTTTopicServerIP, int(_g_cst_ToMQTTTopicServerPort), 60)
