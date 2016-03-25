@@ -4,6 +4,7 @@
 import sys
 import threading
 import time
+import json
 
 import NIT_Node_Module
 from terminalColor import bcolors
@@ -57,6 +58,26 @@ def RxRouting(self, _obj_json_msg):
     nit.M2M_RxRouting(_obj_json_msg)
 
 
+global flip
+def loop():
+    global flip
+    decide = "g"
+    decide = input("enter 't' to trigger")
+    print(decide)
+
+    initMSGObj = {'TopicName': "NODE-01/SW1", 'Control': 'M2M_SET', 'Source': "NODE-01", 'M2M_Value': flip}
+    initMSGSTR = json.dumps(initMSGObj)
+
+    if (decide == "t"):
+        nit.DirectMSG("NODE-01/SW1", initMSGSTR)
+        print("SW01 SENT.")
+        flip = (~flip)
+
+
 if __name__ == "__main__":
     MQTT_Thread = threading.Thread(target=NodeToServerMQTTThread, name="main_thread")
     MQTT_Thread.start()
+    global flip
+    flip = 0
+    while True:
+        loop()

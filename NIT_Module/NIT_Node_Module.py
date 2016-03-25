@@ -63,3 +63,6 @@ class NIT_Node:
                 if rule.TopicName == separation_obj_json_msg["TopicName"]:
                     print(
                         bcolors.OKGREEN + ">>Trigger<< Rx SET Msg " + rule.Target + " " + rule.TargetValueOverride + bcolors.ENDC)
+
+    def DirectMSG(self, topicName, msg):
+        publisher.MQTT_PublishMessage(topicName, msg)

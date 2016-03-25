@@ -59,13 +59,14 @@ class SubscriberManager():
             print(bcolors.WARNING + "[INFO] MQTT message receive from Topic %s at %s :%s" % (
                 msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)) + bcolors.ENDC)
             try:
-                _obj_json_msg = json.loads(str(msg.payload, encoding="UTF-8"))
+                if (msg.payload != ""):
+                    _obj_json_msg = json.loads(str(msg.payload, encoding="UTF-8"))
 
-                # from Simulator_Node import RxRouting
-                # RxRouting(_obj_json_msg)
+                    # from Simulator_Node import RxRouting
+                    # RxRouting(_obj_json_msg)
 
-                # callback
-                self.callb(_obj_json_msg)
+                    # callback
+                    self.callb(_obj_json_msg)
 
 
             except (NameError, TypeError, RuntimeError) as e:

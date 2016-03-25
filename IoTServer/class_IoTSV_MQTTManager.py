@@ -66,15 +66,16 @@ class SubscriberManager():
                 msg.topic, time.asctime(time.localtime(time.time())), str(msg.payload)) + bcolors.ENDC)
 
             try:
-                # print("[INFO] Receive from MQTT %s" % msg.payload)
-                _obj_json_msg = json.loads(str(msg.payload, encoding='UTF-8'))
+                if(msg.payload!=""):
+                    # print("[INFO] Receive from MQTT %s" % msg.payload)
+                    _obj_json_msg = json.loads(str(msg.payload, encoding='UTF-8'))
 
-                # 測試用的，後來不用特意另外開thread
-                # DecisionActionsThreading(_obj_json_msg).start();
-                if(_obj_json_msg["Source"] != IoTServer._g_cst_IoTServerUUID):
-                   class_IoTSV_DecisionActions.DecisionAction().Judge(_obj_json_msg)
+                    # 測試用的，後來不用特意另外開thread
+                    # DecisionActionsThreading(_obj_json_msg).start();
+                    if(_obj_json_msg["Source"] != IoTServer._g_cst_IoTServerUUID):
+                       class_IoTSV_DecisionActions.DecisionAction().Judge(_obj_json_msg)
             except (RuntimeError, TypeError, NameError) as e:
-                raise
+                # raise
                 print(bcolors.FAIL + "[ERROR] Couldn't converte json to Objet! Error Details:" + str(e) + bcolors.ENDC)
 
         client = mqtt.Client()

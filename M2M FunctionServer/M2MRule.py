@@ -22,7 +22,14 @@ _g_M2MRulesMappingList = [{"RuleID": "1", "InputNode": "NODE-01", "InputIO": "SW
                            "OutputNode": "NODE-02", "OutputIO": "LED4", "TargetValueOverride": "0"},
 
                           {"RuleID": "3", "InputNode": "NODE-02", "InputIO": "SW2",
-                           "OutputNode": "NODE-01", "OutputIO": "LED2", "TargetValueOverride": "1"}]
+                           "OutputNode": "NODE-01", "OutputIO": "LED2", "TargetValueOverride": "1"},
+
+                          {"RuleID": "4", "InputNode": "NODE-01", "InputIO": "SW1",
+                           "OutputNode": "NODE-03", "OutputIO": "LED1", "TargetValueOverride": "EQU"},
+
+                           {"RuleID": "5", "InputNode": "NODE-03", "InputIO": "SW1",
+                           "OutputNode": "NODE-01", "OutputIO": "LED1", "TargetValueOverride": "EQU"}
+                          ]
 
 
 class FunctionServerMappingRules():
