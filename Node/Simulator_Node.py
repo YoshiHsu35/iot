@@ -53,7 +53,7 @@ def NodeToServerMQTTThread():
         sys.exit(1)
 
 
-########### Normal Socket to Server(As socket client) ##############
+########### Keyboard interactive ##############
 def RxRouting(self, _obj_json_msg):
     nit.M2M_RxRouting(_obj_json_msg)
 

@@ -61,6 +61,7 @@ class NIT_Node:
         elif separation_obj_json_msg["Control"] == "M2M_SET":
             for rule in self.Rules:
                 if rule.TopicName == separation_obj_json_msg["TopicName"]:
+                    ####### You need custom something here #######
                     print(
                         bcolors.OKGREEN + ">>Trigger<< Rx SET Msg " + rule.Target + " " + rule.TargetValueOverride + bcolors.ENDC)
 
