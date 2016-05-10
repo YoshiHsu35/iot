@@ -44,21 +44,30 @@ Email: ar801112usase@hotmail.com
 
 Simulator\_Node目前為NODE-01，不須做任何動作。將由M2M FunctionServer/dummy\_Node\_New.py進行觸發，注意dummy\_Node\_New.py不遵守完整流程，僅做假的trigger訊號發送至NODE-02/SW2，之後立即結束運行dummy\_Node\_New，欲再次trigger需重新執行。
 
-<img src="./media/image1.png" width="624" height="75" />
+![1.png](https://bitbucket.org/repo/k98B5y/images/3451377721-1.png)
 
 先執行上面環境設置後，執行Simulator\_Node後，執行dummy\_Node\_New.py則可觀察到Simulator\_Node之terminal訊息：
 
-<img src="./media/image2.png" width="624" height="82" />
-
+![2.png](https://bitbucket.org/repo/k98B5y/images/908414715-2.png)
 **模擬情境2(一假NODE+一真實NODE)：**
 
 Simulator\_Node目前為NODE-01，其具有Switch的function，可於terminal鍵入”t” enter後，將會發送M2M訊息至TOPIC: NODE-01/SW1
 
+
+```
+#!python
+
 {'TopicName': "NODE-01/SW1", 'Control': 'M2M\_SET', 'Source': "NODE-01", 'M2M\_Value': 1}
+```
+
 
 而你可以自己將Simulator\_Node複製到實體的RPI上，做一點程式上的改變，使其能夠註冊為NODE-03，並自動交由M2M FS分派對應的RULE，NODE-03則會自動依照M2M FunctionServer/M2MRule.py內的規則自動訂閱至NODE-01/SW1。而當NODE-01發送訊息時則可設定該NODE-03的狀況
 
 可進行TRACE CODE NODE-03上的副程式M2M\_RxRouting (與Simulator\_Node同樣)
+
+```
+#!python
+
 
 **def RxRouting**(self, \_obj\_json\_msg):
 nit.M2M\_RxRouting(\_obj\_json\_msg)
@@ -91,5 +100,7 @@ class\_Node\_MQTTManager.SubscriberThreading(subTopic\["TopicName"\], self.nodeU
 **if** rule.TopicName == separation\_obj\_json\_msg\["TopicName"\]:
 print(
 bcolors.OKGREEN + "&gt;&gt;Trigger&lt;&lt; Rx SET Msg " + rule.Target + " " + rule.TargetValueOverride + bcolors.ENDC)
+```
+
 
 在最後面的Control去看要設置什麼樣的動作，這邊假設是M2M\_SET要進行TERMINAL的畫面顯示，可以將此程式碼片段改為其他欲進行的動作
